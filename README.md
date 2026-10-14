@@ -12,7 +12,8 @@ Open `index.html` in any browser, or play the hosted version on GitHub Pages.
 - **Hold W, the up arrow, or Space** to fire the engine.
 - **A / D or the arrow keys** slide the rocket left and right.
 - **S** fires the Launch Spring once you've built one.
-- Each flight is one day. Get paid for how high you fly, then spend coins on upgrades in the shop.
+- Each flight is one day. Get paid for how high you fly, then spend your cash on upgrades in the shop.
+- Earn rainbow stars from challenges, rare finds, and playtime. Spend 5 to open a Mystery Box with a random cosmetic. Golden ones are super rare!
 - Dodge birds, planes, balloons, drones, asteroids and space junk. In Deep Space, giant asteroids destroy you on contact.
 - Land on the Moon to unlock Infinite Mode.
 

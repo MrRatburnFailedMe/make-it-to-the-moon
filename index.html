@@ -421,6 +421,37 @@ body:not(.mode-intro) .intro { display: none; }
 .cos-tile b { display: block; font-family: var(--f-display); font-weight: 400; font-size: 15px; line-height: 1.1; }
 .cos-tile small { color: var(--muted); font-weight: 800; font-size: 12px; }
 .cos-tile.on small { color: var(--mint); }
+.cos-tile.lock { opacity: .55; cursor: default; }
+.cos-tile.lock .sw { background: var(--panel) !important; display: grid; place-items: center; font: 400 18px var(--f-display); color: var(--muted); }
+.cos-tile.lock:hover { border-color: var(--ink); }
+.cos-tile .sw.L { box-shadow: 0 0 10px #ffcf33; }
+.rc { color: #c9d2e6; } .rr { color: #58c4ff; } .re { color: #c77dff; } .rL { color: #ffcf33; text-shadow: 0 0 8px rgba(255,207,51,.7); }
+.cos-tile small.rc, .cos-tile small.rr, .cos-tile small.re, .cos-tile small.rL { font-size: 11px; }
+.mbox-row { display: flex; gap: 16px; align-items: center; background: var(--panel-2); border: 3px solid var(--ink); border-radius: 16px; padding: 12px 16px; }
+.mbox { position: relative; flex: none; width: 96px; height: 96px; border: 0; background: none; cursor: pointer; padding: 0; }
+.mbox-body { position: absolute; left: 6px; right: 6px; bottom: 4px; height: 62px; border: 3px solid var(--ink); border-radius: 8px;
+  background: linear-gradient(90deg, transparent 42%, #ffcf33 42% 58%, transparent 58%), linear-gradient(#8a3dff, #5a2d82);
+  display: grid; place-items: center; font: 400 30px var(--f-display); color: #fff3dc; text-shadow: 0 2px 0 var(--ink); }
+.mbox-lid { position: absolute; left: 0; right: 0; top: 14px; height: 24px; z-index: 1; border: 3px solid var(--ink); border-radius: 8px;
+  background: linear-gradient(90deg, transparent 42%, #ffcf33 42% 58%, transparent 58%), linear-gradient(#a14dff, #7a35d6); transition: transform .3s; }
+.mbox:hover .mbox-lid { transform: translateY(-4px) rotate(-4deg); }
+.mbox:disabled { cursor: not-allowed; filter: grayscale(.7); }
+.mbox.shake { animation: boxshake .12s linear 9; }
+.mbox.pop .mbox-lid { transform: translateY(-40px) rotate(-30deg); opacity: 0; transition: transform .35s, opacity .35s; }
+@keyframes boxshake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg) translateY(-2px); } 75% { transform: rotate(7deg) translateY(-2px); } }
+.mbox-info { min-width: 0; }
+.mbox-info b { font: 400 22px var(--f-display); color: var(--cream); }
+.mbox-info p { margin: 4px 0 6px; color: var(--muted); font-weight: 700; font-size: 14px; }
+.mbox-odds { display: flex; flex-wrap: wrap; gap: 10px; font-weight: 800; font-size: 13px; }
+.mbox-reveal { display: flex; gap: 14px; align-items: center; border: 3px solid var(--ink); border-radius: 16px; padding: 12px 16px; background: var(--panel-2); animation: reveal .5s cubic-bezier(.2,1.6,.4,1); }
+.mbox-reveal .sw { width: 54px; height: 54px; border-radius: 12px; border: 3px solid var(--ink); flex: none; }
+.mbox-reveal b { display: block; font: 400 24px var(--f-display); color: var(--cream); }
+.mbox-reveal small { font-weight: 800; }
+.mbox-reveal.L { background: linear-gradient(110deg, #5a3a00, #c98a00 30%, #ffe680 50%, #c98a00 70%, #5a3a00); background-size: 220% 100%; animation: reveal .5s cubic-bezier(.2,1.6,.4,1), shimmer 1.6s linear infinite; }
+.mbox-reveal.L b { color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.mbox-reveal.e { box-shadow: 0 0 0 3px #c77dff inset; } .mbox-reveal.r { box-shadow: 0 0 0 3px #58c4ff inset; }
+@keyframes reveal { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -120% 0; } }
 .cos-tile:focus-visible, .cos-tabs button:focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
 @media (max-width: 640px) { .cos-body { grid-template-columns: minmax(0, 1fr); } #cosCv { height: 260px; } }
 
@@ -436,6 +467,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   clip-path: polygon(50% 0%, 62% 35%, 99% 36%, 69% 58%, 80% 94%, 50% 72%, 20% 94%, 31% 58%, 1% 36%, 38% 35%); }
 .wallet i.gcoin { width: 22px !important; height: 22px !important; }
 .coins.goldc { color: #ff9ae8; }
+
+#boostBtn.nudge { animation: nudge 0.5s ease-in-out 3; }
+@keyframes nudge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 
 @media (prefers-reduced-motion: reduce) {
   .card.bump { animation: none; }
@@ -471,7 +505,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       <div class="chip" id="mkChip">MK 1</div>
       <button class="stats-btn" id="statsBtn" type="button">View stats</button>
       <button class="stats-btn chal-btn" id="chalBtn" type="button">Challenges <span id="chalBadge"></span></button>
-      <button class="stats-btn cos-btn2" id="cosBtn2" type="button">Cosmetics</button>
+      <button class="stats-btn cos-btn2" id="cosBtn2" type="button" hidden>Mystery Box</button>
       <div class="peak-badge" id="peakWrap"><small>Projected peak</small><b id="peakBadge">0 m</b><span class="best" id="bestLine"></span></div>
       <div class="garage-btns" id="garageBtns">
         <button class="fire" id="fireBtn" type="button">Test fire <kbd>F</kbd></button>
@@ -523,7 +557,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       <div class="next-pop" id="nextPop" hidden><canvas id="nextPopCv"></canvas><span id="nextPopLabel"></span></div>
       <div class="shop-title"><h2>The Shop</h2><p id="shopSub">Upgrade, then launch again.</p></div>
       <button class="btn next-day" type="button" id="nextDayBtn">Start day 2</button>
-      <button class="btn cos-open" type="button" id="cosBtn">Cosmetic Shop</button>
+      <button class="btn cos-open" type="button" id="cosBtn" hidden>Mystery Box</button>
       <div class="wallet"><span class="wcoins"><i class="coin"></i><b id="walletCoins">0</b></span><span class="wgold" title="Rainbow stars"><i class="gcoin"></i><b id="walletGold">0</b></span></div>
       <div class="ship-box"><canvas id="shopShip" aria-label="Your rocket"></canvas><span class="ship-label" id="shipLabel">MK 1</span></div>
       <div class="meters" id="shopMeters"></div>
@@ -606,8 +640,17 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
 
 <div class="modal" id="cosModal" hidden>
   <div class="modal-card cos-card" role="dialog" aria-modal="true" aria-labelledby="cosTitle">
-    <div class="sm-head"><h2 id="cosTitle">Cosmetic Shop</h2><button class="xbtn" id="cosClose" type="button" aria-label="Close cosmetic shop">&times;</button></div>
-    <p class="cos-sub">Spooky season collection! Everything is free for now. Hover to preview, click to equip.</p>
+    <div class="sm-head"><h2 id="cosTitle">Mystery Box</h2><button class="xbtn" id="cosClose" type="button" aria-label="Close mystery box">&times;</button></div>
+    <div class="mbox-row">
+      <button class="mbox" id="mboxBtn" type="button" aria-label="Open a mystery box for 5 rainbow stars"><span class="mbox-lid"></span><span class="mbox-body">?</span></button>
+      <div class="mbox-info">
+        <b>Open a box: <i class="gcoin"></i>5</b>
+        <p id="mboxMsg">Every box holds a spooky cosmetic you don't have yet. Some are super rare, and the golden ones are the rarest of all!</p>
+        <div class="mbox-odds"><span class="rc">Common</span><span class="rr">Rare</span><span class="re">Epic</span><span class="rL">Golden</span></div>
+      </div>
+    </div>
+    <div class="mbox-reveal" id="mboxReveal" hidden></div>
+    <p class="cos-sub">Your collection. Hover to preview, click to equip.</p>
     <div class="cos-body">
       <canvas id="cosCv" aria-label="Your rocket with cosmetics"></canvas>
       <div class="cos-right">
@@ -866,7 +909,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
 
   // ---------- Physics constants (shared by the projection and real flights) ----------
   // Distances are game meters. The planet is small so space and the Moon are reachable.
-  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 8000, MY: 178000, RM: 8000, GM: 4 };
+  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 8000, MY: 235000, RM: 8000, GM: 4 };
   const MOON_START = Math.hypot(P.MX, P.MY) - P.RM;
   const PREVIEW_SECS = [0, 8, 30, 90];
 
@@ -1087,7 +1130,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   ['nextDayBtn'].forEach(id => document.getElementById(id).addEventListener('click', () => {
     closeTut(true);
     records.day = (records.day || 1) + 1; setMode('launch'); renderUI();
-    setTimeout(() => { if (!flight && screen === 'launch') startFlight(); }, 900);
+    setTimeout(autoLaunch, 900);
     parts = []; floats = [];
     window.scrollTo({ top: 0, behavior: 'smooth' });
     floats.push({ text: `DAY ${records.day}!`, x: rx() + 120, y: 260, life: 1.6, max: 1.6, color: '#3ee6b0' });
@@ -1150,6 +1193,8 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     if (!baseOpen) bm.innerHTML = `<div class="q">?</div><div><b>Something big is coming...</b><p>Keep upgrading your rocket. ${BASE_AT - rocketLv()} more upgrade${BASE_AT - rocketLv() === 1 ? '' : 's'} to find out.</p><span class="mbar" style="--c:var(--sun)"><i class="lo" style="width:${(rocketLv() / BASE_AT * 100).toFixed(0)}%"></i></span></div>`;
     ['nextDayBtn'].forEach(id => { document.getElementById(id).textContent = `Start day ${records.day + 1}`; });
     document.getElementById('boostBtn').hidden = !state.pad;
+    if (!records.boxSeen && (records.gold || 0) > 0) { records.boxSeen = true; save(); setTimeout(() => toast('You got your first rainbow star! The MYSTERY BOX is unlocked.'), 400); }
+    document.getElementById('cosBtn').hidden = !boxUnlocked(); if (!flight) document.getElementById('cosBtn2').hidden = !boxUnlocked();
     document.getElementById('bestLine').textContent = records.flights ? `Best flight: ${fmtAlt(records.best)}` : 'No flights yet';
     document.getElementById('peakBadge').textContent = fmtRange(st.peakLo, st.peakHi);
     document.getElementById('mkChip').textContent = 'MK ' + (rocketLv() + 1);
@@ -1339,29 +1384,33 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   ];
 
   // ---------- Cosmetics (Halloween collection) ----------
+  const GOLD_SW = 'linear-gradient(135deg, #fff3a8, #ffcf33 40%, #c98a00 70%, #ffe680)';
   const COSMETICS = {
     paint: { label: 'Paint', note: 'Needs a real hull (Tin Can or better).', items: [
-      { id: 'none', name: 'Factory', sw: '#c9d2e6' }, { id: 'pumpkin', name: 'Pumpkin Orange', sw: '#ff7a1a' }, { id: 'midnight', name: 'Midnight Black', sw: '#2a2840' },
-      { id: 'slime', name: 'Slime Green', sw: '#7ee06a' }, { id: 'ghost', name: 'Ghost White', sw: '#f4f2fb' }, { id: 'candy', name: 'Candy Corn', sw: 'linear-gradient(#fff3dc 33%, #ff9a3c 33% 66%, #ffcf33 66%)' },
-      { id: 'hex', name: 'Hex Purple', sw: '#8a3dff' } ] },
+      { id: 'none', name: 'Factory', sw: '#c9d2e6' }, { id: 'pumpkin', name: 'Pumpkin Orange', sw: '#ff7a1a', r: 'c' }, { id: 'midnight', name: 'Midnight Black', sw: '#2a2840', r: 'c' },
+      { id: 'slime', name: 'Slime Green', sw: '#7ee06a', r: 'c' }, { id: 'ghost', name: 'Ghost White', sw: '#f4f2fb', r: 'r' }, { id: 'candy', name: 'Candy Corn', sw: 'linear-gradient(#fff3dc 33%, #ff9a3c 33% 66%, #ffcf33 66%)', r: 'e' },
+      { id: 'hex', name: 'Hex Purple', sw: '#8a3dff', r: 'r' }, { id: 'gold', name: 'Solid Gold', sw: GOLD_SW, r: 'L' } ] },
     nose: { label: 'Nose', items: [
-      { id: 'none', name: 'Nothing', sw: '#3a3656' }, { id: 'witch', name: 'Witch Hat', sw: '#5a2d82' }, { id: 'jack', name: "Jack-o'-Lantern", sw: '#ff7a1a' },
-      { id: 'horns', name: 'Devil Horns', sw: '#e8423f' }, { id: 'ghosty', name: 'Little Ghost', sw: '#f4f2fb' }, { id: 'candycorn', name: 'Giant Candy Corn', sw: '#ffcf33' } ] },
+      { id: 'none', name: 'Nothing', sw: '#3a3656' }, { id: 'witch', name: 'Witch Hat', sw: '#5a2d82', r: 'c' }, { id: 'jack', name: "Jack-o'-Lantern", sw: '#ff7a1a', r: 'r' },
+      { id: 'horns', name: 'Devil Horns', sw: '#e8423f', r: 'c' }, { id: 'ghosty', name: 'Little Ghost', sw: '#f4f2fb', r: 'r' }, { id: 'candycorn', name: 'Giant Candy Corn', sw: '#ffcf33', r: 'e' } ] },
     fins: { label: 'Fins', items: [
-      { id: 'none', name: 'Stock', sw: '#3a3656' }, { id: 'bat', name: 'Bat Wings', sw: '#2a2840' }, { id: 'bone', name: 'Bone Fins', sw: '#fff3dc' }, { id: 'spider', name: 'Spider Legs', sw: '#0b0820' } ] },
+      { id: 'none', name: 'Stock', sw: '#3a3656' }, { id: 'bat', name: 'Bat Wings', sw: '#2a2840', r: 'c' }, { id: 'bone', name: 'Bone Fins', sw: '#fff3dc', r: 'r' }, { id: 'spider', name: 'Spider Legs', sw: '#0b0820', r: 'e' } ] },
     sticker: { label: 'Stickers', items: [
-      { id: 'none', name: 'None', sw: '#3a3656' }, { id: 'web', name: 'Spider Web', sw: '#c9d2e6' }, { id: 'skull', name: 'Skull', sw: '#fff3dc' },
-      { id: 'stitches', name: 'Monster Stitches', sw: '#7ee06a' }, { id: 'cat', name: 'Black Cat', sw: '#ffcf33' } ] },
+      { id: 'none', name: 'None', sw: '#3a3656' }, { id: 'web', name: 'Spider Web', sw: '#c9d2e6', r: 'c' }, { id: 'skull', name: 'Skull', sw: '#fff3dc', r: 'c' },
+      { id: 'stitches', name: 'Monster Stitches', sw: '#7ee06a', r: 'r' }, { id: 'cat', name: 'Black Cat', sw: '#ffcf33', r: 'e' } ] },
     flame: { label: 'Flame', items: [
-      { id: 'none', name: 'Stock', sw: '#ff9a3c' }, { id: 'ghostfire', name: 'Ghost Fire', sw: '#7fe9ff', pal: { outer: '#7fe9ff', inner: '#ffffff', glow: 16 } },
-      { id: 'witchfire', name: 'Witch Green', sw: '#7ee06a', pal: { outer: '#5ad65a', inner: '#e9ffd9', glow: 16 } },
-      { id: 'candyfire', name: 'Candy Flame', sw: '#ff9a3c', pal: { outer: '#ff9a3c', inner: '#fff3dc', glow: 12 } },
-      { id: 'hexfire', name: 'Hex Purple', sw: '#c77dff', pal: { outer: '#a14dff', inner: '#ffd6ff', glow: 18 } } ] },
+      { id: 'none', name: 'Stock', sw: '#ff9a3c' }, { id: 'ghostfire', name: 'Ghost Fire', sw: '#7fe9ff', r: 'r', pal: { outer: '#7fe9ff', inner: '#ffffff', glow: 16 } },
+      { id: 'witchfire', name: 'Witch Green', sw: '#7ee06a', r: 'c', pal: { outer: '#5ad65a', inner: '#e9ffd9', glow: 16 } },
+      { id: 'candyfire', name: 'Candy Flame', sw: '#ff9a3c', r: 'c', pal: { outer: '#ff9a3c', inner: '#fff3dc', glow: 12 } },
+      { id: 'hexfire', name: 'Hex Purple', sw: '#c77dff', r: 'e', pal: { outer: '#a14dff', inner: '#ffd6ff', glow: 18 } },
+      { id: 'goldfire', name: 'Golden Flame', sw: GOLD_SW, r: 'L', pal: { outer: '#ffc21a', inner: '#fffbe0', glow: 26 } } ] },
     trail: { label: 'Trail', items: [
-      { id: 'none', name: 'Smoke', sw: '#d9d2f2' }, { id: 'bats', name: 'Bat Swarm', sw: '#2a2840' }, { id: 'ghosts', name: 'Ghost Wisps', sw: '#f4f2fb' }, { id: 'candy', name: 'Candy Trail', sw: '#ff7ad9' } ] },
+      { id: 'none', name: 'Smoke', sw: '#d9d2f2' }, { id: 'bats', name: 'Bat Swarm', sw: '#2a2840', r: 'r' }, { id: 'ghosts', name: 'Ghost Wisps', sw: '#f4f2fb', r: 'e' }, { id: 'candy', name: 'Candy Trail', sw: '#ff7ad9', r: 'c' },
+      { id: 'goldtrail', name: 'Gold Sparkles', sw: GOLD_SW, r: 'L' } ] },
     hat: { label: 'Pilot', items: [
-      { id: 'none', name: 'Bare Head', sw: '#7ee06a' }, { id: 'witchhat', name: 'Witch Hat', sw: '#5a2d82' }, { id: 'devil', name: 'Devil Horns', sw: '#e8423f' },
-      { id: 'mummy', name: 'Mummy Wraps', sw: '#fff3dc' }, { id: 'vamp', name: 'Vampire Collar', sw: '#b3122e' } ] }
+      { id: 'none', name: 'Bare Head', sw: '#7ee06a' }, { id: 'witchhat', name: 'Witch Hat', sw: '#5a2d82', r: 'c' }, { id: 'devil', name: 'Devil Horns', sw: '#e8423f', r: 'c' },
+      { id: 'mummy', name: 'Mummy Wraps', sw: '#fff3dc', r: 'r' }, { id: 'vamp', name: 'Vampire Collar', sw: '#b3122e', r: 'e' },
+      { id: 'crown', name: 'Golden Crown', sw: GOLD_SW, r: 'L' } ] }
   };
   let cosView = null; // hover preview in the cosmetic shop
   const cosOf = slot => (cosView && cosView.slot === slot ? cosView.id : (records.cos && records.cos[slot])) || 'none';
@@ -1379,6 +1428,13 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       ctx.globalCompositeOperation = 'color';
       [['#fff3dc', 0], ['#ff9a3c', 0.33], ['#ffcf33', 0.66]].forEach(([c, f]) => { ctx.fillStyle = c; ctx.fillRect(-W / 2, bodyTop + H * f, W, H * 0.34); });
     } else if (id === 'midnight') { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#4a4560'; ctx.fillRect(-W / 2, bodyTop, W, H); }
+    else if (id === 'gold') {
+      ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = '#ffbf1f'; ctx.fillRect(-W / 2, bodyTop, W, H);
+      ctx.globalCompositeOperation = 'source-over';
+      const sh = ((performance.now() / 1400) % 1.6) - 0.3, g = ctx.createLinearGradient(-W / 2, bodyTop, W / 2, bodyTop + H);
+      g.addColorStop(clamp(sh - 0.15, 0, 1), 'rgba(255,255,255,0)'); g.addColorStop(clamp(sh, 0, 1), 'rgba(255,255,230,.55)'); g.addColorStop(clamp(sh + 0.15, 0, 1), 'rgba(255,255,255,0)');
+      ctx.fillStyle = g; ctx.fillRect(-W / 2, bodyTop, W, H);
+    }
     else { ctx.globalCompositeOperation = 'color'; ctx.fillStyle = cosItem('paint').sw; ctx.fillRect(-W / 2, bodyTop, W, H); }
     ctx.restore();
   }
@@ -1489,6 +1545,11 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       ctx.strokeStyle = 'rgba(255,243,220,.92)'; ctx.lineWidth = fr * 0.28;
       [[-0.75, -0.2], [-0.35, 0.15], [0.45, -0.1], [0.8, 0.2]].forEach(([yy, a]) => { ctx.beginPath(); ctx.moveTo(-fr * 1.1, fr * yy); ctx.lineTo(fr * 1.1, fr * (yy + a)); ctx.stroke(); });
       ctx.restore();
+    } else if (id === 'crown') {
+      ctx.beginPath(); ctx.moveTo(-fr * 0.8, -fr * 0.7); ctx.lineTo(-fr * 0.85, -fr * 1.5); ctx.lineTo(-fr * 0.42, -fr * 1.1); ctx.lineTo(0, -fr * 1.7);
+      ctx.lineTo(fr * 0.42, -fr * 1.1); ctx.lineTo(fr * 0.85, -fr * 1.5); ctx.lineTo(fr * 0.8, -fr * 0.7); ctx.closePath();
+      ctx.save(); ctx.shadowColor = '#ffe37a'; ctx.shadowBlur = 10; ctx.fillStyle = '#ffcf33'; ctx.fill(); ctx.restore(); strokeInk(2);
+      dot(0, -fr * 0.95, fr * 0.15, '#e8423f'); dot(-fr * 0.5, -fr * 0.88, fr * 0.1, '#58c4ff'); dot(fr * 0.5, -fr * 0.88, fr * 0.1, '#7ee06a');
     } else if (id === 'vamp') {
       [-1, 1].forEach(k => { ctx.beginPath(); ctx.moveTo(k * fr * 0.3, fr * 0.85); ctx.lineTo(k * fr * 1.4, fr * 0.2); ctx.lineTo(k * fr * 1.1, fr * 1.15); ctx.closePath(); ctx.fillStyle = '#b3122e'; ctx.fill(); strokeInk(2); });
       ctx.fillStyle = '#fff'; [-1, 1].forEach(k => { ctx.beginPath(); ctx.moveTo(k * fr * 0.15, fr * 0.42); ctx.lineTo(k * fr * 0.08, fr * 0.6); ctx.lineTo(k * fr * 0.02, fr * 0.42); ctx.closePath(); ctx.fill(); });
@@ -1507,6 +1568,8 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     } else if (id === 'ghosts') {
       ctx.beginPath(); ctx.arc(x, y, s, Math.PI, 0); ctx.lineTo(x + s, y + s); ctx.lineTo(x + s * 0.3, y + s * 0.7); ctx.lineTo(x - s * 0.3, y + s); ctx.lineTo(x - s, y + s * 0.7); ctx.closePath();
       ctx.fillStyle = '#f4f2fb'; ctx.fill(); dot(x - s * 0.35, y - s * 0.1, s * 0.15, INK); dot(x + s * 0.35, y - s * 0.1, s * 0.15, INK);
+    } else if (id === 'goldtrail') {
+      ctx.save(); ctx.shadowColor = '#ffe37a'; ctx.shadowBlur = 8; drawSpookyStar(x, y, s * 1.1, ['#ffcf33', '#fff3a8', '#ffb21a'][Math.floor((p.life * 5 + x) % 3 + 3) % 3]); ctx.restore();
     } else {
       const c = ['#ff7ad9', '#ffcf33', '#3ee6b0', '#ff7a1a'][Math.floor((p.life * 7 + x) % 4 + 4) % 4];
       ctx.beginPath(); ctx.ellipse(x, y, s, s * 0.6, 0, 0, 7); ctx.fillStyle = c; ctx.fill();
@@ -2604,7 +2667,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     flight = null; parts = []; floats = []; starShift = { x: 0, y: 0 }; thr = 0;
     document.body.classList.remove('flying');
     ui.report.hidden = ui.hud.hidden = ui.ctls.hidden = ui.abort.hidden = true;
-    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = $('cosBtn2').hidden = false;
+    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = false; $('cosBtn2').hidden = !boxUnlocked();
     renderUI();
     $('launchBtn').focus({ preventScroll: true });
   }
@@ -2616,6 +2679,14 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     f.bounced = true; Sound.boing();
     if (f.left) { springRelease(f); return; } // already just off the pad: kick right away
     f.bounceT = 0;
+  }
+  // A new day starts the 3-2-1 right away. With a launch spring, wait for the player to pick:
+  // BOOST UP (countdown, then the spring fires) or HOLD TO FLY (countdown with no spring).
+  function autoLaunch() {
+    if (flight || screen !== 'launch' || tut) return;
+    if (!state.pad) { startFlight(); return; }
+    floats.push({ text: 'PRESS BOOST UP TO LAUNCH!', x: VW / 2, y: (BASE - yOff) / 2 - 60, life: 2.6, max: 2.6, color: '#ff9a3c' });
+    const b = $('boostBtn'); b.classList.remove('nudge'); void b.offsetWidth; b.classList.add('nudge');
   }
   function springRelease(f) {
     f.vy = Math.max(f.vy + PAD_V[state.pad] * 0.6, PAD_V[state.pad]); f.y = Math.max(f.y, 0.5);
@@ -2632,16 +2703,65 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   $('infBtn').addEventListener('click', () => { if (flight) return; Sound.click(); startFlight({ infinite: true }); });
 
   // ---------- Cosmetic shop ----------
-  let cosTab = 'nose', cosOpen = false;
+  let cosTab = 'nose', cosOpen = false, boxBusy = false;
+  const BOX_COST = 5;
+  const RARITY = { c: { name: 'Common', w: 10 }, r: { name: 'Rare', w: 4 }, e: { name: 'Epic', w: 1.5 }, L: { name: 'GOLDEN', w: 0.35 } };
+  // what this save owns; anything already equipped from the old free shop counts as owned
+  function owned() {
+    if (!records.own) { records.own = {}; for (const k in (records.cos || {})) if (records.cos[k] && records.cos[k] !== 'none') records.own[k + ':' + records.cos[k]] = 1; }
+    return records.own;
+  }
+  const isOwned = (slot, id) => id === 'none' || !!owned()[slot + ':' + id];
+  function boxUnlocked() { return !!(records.boxSeen || (records.gold || 0) > 0 || Object.keys(owned()).length); }
+  function boxPool() {
+    const pool = [];
+    for (const [slot, c] of Object.entries(COSMETICS)) for (const it of c.items) if (it.id !== 'none' && !isOwned(slot, it.id)) pool.push({ slot, it });
+    return pool;
+  }
+  function rollBox() {
+    const pool = boxPool(); let sum = 0;
+    pool.forEach(p => sum += RARITY[p.it.r].w);
+    let x = Math.random() * sum;
+    for (const p of pool) { x -= RARITY[p.it.r].w; if (x <= 0) return p; }
+    return pool[pool.length - 1];
+  }
   function renderCos() {
     $('cosTabs').innerHTML = Object.entries(COSMETICS).map(([k, c]) => `<button type="button" role="tab" data-tab="${k}" aria-selected="${k === cosTab}">${c.label}</button>`).join('');
     const cat = COSMETICS[cosTab], eq = (records.cos && records.cos[cosTab]) || 'none';
     $('cosNote').textContent = cat.note || '';
-    $('cosGrid').innerHTML = cat.items.map(it => `<button type="button" class="cos-tile${it.id === eq ? ' on' : ''}" data-id="${it.id}"><span class="sw" style="background:${it.sw}"></span><span><b>${it.name}</b><small>${it.id === eq ? 'EQUIPPED' : 'FREE'}</small></span></button>`).join('');
+    $('cosGrid').innerHTML = cat.items.map(it => {
+      if (!isOwned(cosTab, it.id)) return `<button type="button" class="cos-tile lock" data-lock="1"><span class="sw">?</span><span><b>???</b><small class="r${it.r}">${RARITY[it.r].name}</small></span></button>`;
+      const tag = it.id === eq ? 'EQUIPPED' : it.r ? RARITY[it.r].name : 'Default';
+      return `<button type="button" class="cos-tile${it.id === eq ? ' on' : ''}" data-id="${it.id}"><span class="sw${it.r === 'L' ? ' L' : ''}" style="background:${it.sw}"></span><span><b>${it.name}</b><small${it.id === eq || !it.r ? '' : ` class="r${it.r}"`}>${tag}</small></span></button>`;
+    }).join('');
+    const left = boxPool().length, stars = records.gold || 0;
+    $('mboxBtn').disabled = boxBusy || !left;
+    if (!boxBusy) $('mboxMsg').textContent = !left ? 'You collected every cosmetic. Legend!'
+      : stars >= BOX_COST ? `You have ${stars} rainbow stars. Click the box to open it! (${left} cosmetics left to find)`
+      : `You have ${stars} rainbow star${stars === 1 ? '' : 's'}. Earn ${BOX_COST - stars} more from challenges, the space station, Fuel Rushes, or just by playing.`;
   }
+  $('mboxBtn').addEventListener('click', () => {
+    if (boxBusy || !boxPool().length) return;
+    const b = $('mboxBtn');
+    if ((records.gold || 0) < BOX_COST) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); renderCos(); return; }
+    records.gold -= BOX_COST; boxBusy = true; save(); renderUI();
+    const won = rollBox();
+    owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save();
+    $('mboxReveal').hidden = true; $('mboxMsg').textContent = 'Opening...';
+    b.classList.remove('pop'); b.classList.add('shake'); Sound.count(false);
+    setTimeout(() => {
+      b.classList.remove('shake'); b.classList.add('pop');
+      const r = won.it.r, rv = $('mboxReveal');
+      rv.className = 'mbox-reveal ' + r; rv.hidden = false;
+      rv.innerHTML = `<span class="sw" style="background:${won.it.sw}"></span><div><small class="r${r}">${r === 'L' ? '&#9733; GOLDEN! SUPER RARE! &#9733;' : RARITY[r].name.toUpperCase()} · ${COSMETICS[won.slot].label}</small><b>${won.it.name}</b><small>Equipped on your rocket!</small></div>`;
+      if (r === 'L' || r === 'e') Sound.gold(); else Sound.upgrade();
+      cosTab = won.slot; cosView = null; boxBusy = false; renderCos();
+      setTimeout(() => b.classList.remove('pop'), 900);
+    }, 1150);
+  });
   function openCos() {
     if (flight) return;
-    cosOpen = true; renderCos();
+    cosOpen = true; $('mboxReveal').hidden = true; renderCos();
     const m = $('cosModal'); m.hidden = false; placeNearPointer(m.querySelector('.modal-card'));
     $('cosClose').focus({ preventScroll: true });
   }
@@ -2653,7 +2773,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && cosOpen) closeCos(); });
   $('cosTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (!b) return; cosTab = b.dataset.tab; cosView = null; renderCos(); Sound.click(); });
   $('cosGrid').addEventListener('click', e => {
-    const b = e.target.closest('[data-id]'); if (!b) return;
+    const b = e.target.closest('[data-id]'); if (!b) { if (e.target.closest('[data-lock]')) Sound.nope(); return; }
     records.cos = records.cos || {}; records.cos[cosTab] = b.dataset.id; save(); renderCos(); Sound.upgrade();
   });
   $('cosGrid').addEventListener('mouseover', e => { const b = e.target.closest('[data-id]'); cosView = b ? { slot: cosTab, id: b.dataset.id } : null; });
@@ -3733,7 +3853,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     ctx.restore();
   }
   const STATION_ALT = 18000;
-  const DEEP_LO = 40000, DEEP_HI = 156000;
+  const DEEP_LO = 40000, DEEP_HI = 208000;
   function drawStation2(st, t) {
     const y = st.y, gx = st.gx, half = st.gap / 2;
     // trusses out to both edges with solar panel wings
@@ -4177,7 +4297,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     const wasIntro = tut.id === 'intro';
     tut = null; document.getElementById('tutModal').hidden = true;
     // first day: once the how-to is closed, the countdown begins
-    if (wasIntro && screen === 'launch' && !flight) setTimeout(() => { if (!flight && screen === 'launch') startFlight(); }, 500);
+    if (wasIntro && screen === 'launch' && !flight) setTimeout(autoLaunch, 500);
     if (skipAll) tutQueue.length = 0;
     // only keep showing queued tutorials while you're still in the shop
     if (tutQueue.length && screen === 'shop' && !flight) setTimeout(() => { if (!tut && screen === 'shop' && !flight) openTutorial(tutQueue.shift()); }, 250);
