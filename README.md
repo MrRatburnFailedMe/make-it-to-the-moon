@@ -13,7 +13,8 @@ Open `index.html` in any browser, or play the hosted version on GitHub Pages.
 - **A / D or the arrow keys** slide the rocket left and right.
 - **S** fires the Launch Spring once you've built one.
 - Each flight is one day. Get paid for how high you fly, then spend your cash on upgrades in the shop.
-- Earn rainbow stars from challenges, rare finds, and playtime. Spend 5 to open a Mystery Box with a random cosmetic. Golden ones are super rare!
+- Rainbow Star Challenges pay 1-3 rainbow stars each. Spend 5 on the Mystery Box to roll a random cosmetic (golden ones are super rare), then dress up your rocket in the Inventory.
+- Settings has Infinite money and Infinite rainbow stars switches if you just want to play around.
 - Dodge birds, planes, balloons, drones, asteroids and space junk. In Deep Space, giant asteroids destroy you on contact.
 - Land on the Moon to unlock Infinite Mode.
 

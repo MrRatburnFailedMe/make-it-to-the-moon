@@ -471,6 +471,44 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
 #boostBtn.nudge { animation: nudge 0.5s ease-in-out 3; }
 @keyframes nudge { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 
+body.mode-box .layout, body.mode-box .shop { display: none; }
+.boxscr { display: none; }
+body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
+.box-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.box-top h2 { margin: 0; font: 400 clamp(30px, 5vw, 44px)/1 var(--f-display); color: #ff9ae8; text-shadow: 0 3px 0 var(--ink); }
+.box-nav { justify-self: start; font: 800 16px var(--f-body); color: var(--cream); background: var(--panel); border: 3px solid var(--ink); border-radius: 12px; padding: 8px 14px; cursor: pointer; box-shadow: 0 4px 0 var(--ink); }
+.box-nav.inv { justify-self: end; background: #1f8f7a; }
+.box-nav:hover { filter: brightness(1.15); }
+.box-stage { position: relative; height: clamp(340px, 58vh, 560px); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 0 5px 0 var(--ink); overflow: hidden;
+  background: radial-gradient(ellipse at 50% 100%, #3a2466, #120d2a 70%); }
+#boxCv { position: absolute; inset: 0; width: 100%; height: 100%; }
+.box-have { position: absolute; top: 12px; right: 14px; font: 400 26px var(--f-display); color: #ff9ae8; background: rgba(0,0,0,.35); border-radius: 12px; padding: 4px 12px; }
+.box-have i.gcoin { width: 24px !important; height: 24px !important; vertical-align: -4px; }
+.box-result { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); text-align: center; background: rgba(18,13,42,.85); border: 3px solid var(--ink); border-radius: 16px; padding: 10px 18px; max-width: calc(100% - 140px); animation: reveal .5s cubic-bezier(.2,1.6,.4,1); }
+.box-result b { display: block; font: 400 30px/1.1 var(--f-display); color: var(--cream); }
+.box-result small { font-weight: 800; font-size: 14px; }
+.box-result span { display: block; color: var(--muted); font-weight: 700; font-size: 13px; margin-top: 2px; }
+.box-result.r-L { background: linear-gradient(110deg, #5a3a00, #c98a00 30%, #ffe680 50%, #c98a00 70%, #5a3a00); background-size: 220% 100%; animation: reveal .5s cubic-bezier(.2,1.6,.4,1), shimmer 1.6s linear infinite; }
+.box-result.r-L b, .box-result.r-L span, .box-result.r-L small { color: #fff; text-shadow: 0 2px 0 var(--ink); }
+.box-result.r-e { box-shadow: 0 0 0 3px #c77dff inset; } .box-result.r-r { box-shadow: 0 0 0 3px #58c4ff inset; }
+.box-bottom { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.box-bottom p { margin: 0; color: var(--muted); font-weight: 700; text-align: center; }
+.btn.roll { font-size: 44px; padding: 10px 70px; border-width: 4px; border-radius: 20px; color: #fff; display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(135deg, #ff5a5f, #ff9a3c, #ffcf33, #3ee6b0, #58c4ff, #c77dff); box-shadow: 0 7px 0 var(--ink); text-shadow: 0 3px 0 var(--ink); }
+.btn.roll small { font-size: 22px; background: rgba(0,0,0,.35); border-radius: 10px; padding: 2px 10px; }
+.btn.roll:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); }
+.btn.roll:disabled { filter: grayscale(.6) brightness(.8); cursor: wait; }
+.btn.roll.broke { filter: grayscale(.85); }
+.btn.roll.shake { animation: boxshake .1s linear 5; }
+.cos-row { display: flex; gap: 8px; }
+.cos-row .btn { flex: 1; font-size: 18px; padding: 8px 6px; }
+.btn.inv-open { color: #fff3dc; background: #1f8f7a; }
+.inv-btn2 { top: 150px; }
+.star-head b { color: #ff9ae8; }
+.chal .sreward { white-space: nowrap; }
+.chal .sreward i.gcoin { margin-right: 0 !important; }
+.estar { color: #ff9ae8; }
+
 @media (prefers-reduced-motion: reduce) {
   .card.bump { animation: none; }
   .bar i { transition: none; }
@@ -506,6 +544,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       <button class="stats-btn" id="statsBtn" type="button">View stats</button>
       <button class="stats-btn chal-btn" id="chalBtn" type="button">Challenges <span id="chalBadge"></span></button>
       <button class="stats-btn cos-btn2" id="cosBtn2" type="button" hidden>Mystery Box</button>
+      <button class="stats-btn inv-btn2" id="invBtn2" type="button" hidden>Inventory</button>
       <div class="peak-badge" id="peakWrap"><small>Projected peak</small><b id="peakBadge">0 m</b><span class="best" id="bestLine"></span></div>
       <div class="garage-btns" id="garageBtns">
         <button class="fire" id="fireBtn" type="button">Test fire <kbd>F</kbd></button>
@@ -557,7 +596,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       <div class="next-pop" id="nextPop" hidden><canvas id="nextPopCv"></canvas><span id="nextPopLabel"></span></div>
       <div class="shop-title"><h2>The Shop</h2><p id="shopSub">Upgrade, then launch again.</p></div>
       <button class="btn next-day" type="button" id="nextDayBtn">Start day 2</button>
-      <button class="btn cos-open" type="button" id="cosBtn" hidden>Mystery Box</button>
+      <div class="cos-row"><button class="btn cos-open" type="button" id="cosBtn" hidden>Mystery Box</button><button class="btn inv-open" type="button" id="invBtn" hidden>Inventory</button></div>
       <div class="wallet"><span class="wcoins"><i class="coin"></i><b id="walletCoins">0</b></span><span class="wgold" title="Rainbow stars"><i class="gcoin"></i><b id="walletGold">0</b></span></div>
       <div class="ship-box"><canvas id="shopShip" aria-label="Your rocket"></canvas><span class="ship-label" id="shipLabel">MK 1</span></div>
       <div class="meters" id="shopMeters"></div>
@@ -571,9 +610,27 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       <div class="mystery" id="baseMystery" hidden></div>
       <div class="cards" id="stationCards"></div>
       <div class="foot">
-        <span>Earn cash by flying higher. Rainbow stars come from special challenges, rare finds, and time spent playing.</span>
+        <span>Earn cash by flying higher. Rainbow stars only come from Rainbow Star Challenges.</span>
         <button class="reset" id="resetBtn" type="button">Reset this save</button>
       </div>
+    </div>
+  </section>
+
+  <section class="boxscr" id="boxScreen" aria-label="Mystery Box">
+    <div class="box-top">
+      <button class="box-nav" id="boxBack" type="button">&#9664; Back</button>
+      <h2>Mystery Box</h2>
+      <button class="box-nav inv" id="boxInv" type="button">Inventory</button>
+    </div>
+    <div class="box-stage">
+      <canvas id="boxCv" aria-label="Mystery box"></canvas>
+      <div class="box-have"><i class="gcoin"></i><b id="boxStars">0</b></div>
+      <div class="box-result" id="boxResult" hidden></div>
+    </div>
+    <div class="box-bottom">
+      <button class="btn roll" id="rollBtn" type="button">ROLL<small><i class="gcoin"></i>5</small></button>
+      <p id="boxMsg"></p>
+      <div class="mbox-odds"><span class="rc">Common</span><span class="rr">Rare</span><span class="re">Epic</span><span class="rL">Golden</span></div>
     </div>
   </section>
 </div>
@@ -623,6 +680,11 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
         <div class="set-row"><span>Effects</span><div class="seg" id="setFx"><button type="button" data-v="full">Full</button><button type="button" data-v="low">Low</button></div></div>
       </div>
       <div class="set-group">
+        <h3>Cheats</h3>
+        <div class="set-row"><span>Infinite money</span><button class="tog" type="button" id="setInfMoney" aria-label="Infinite money"></button></div>
+        <div class="set-row"><span>Infinite rainbow stars</span><button class="tog" type="button" id="setInfStars" aria-label="Infinite rainbow stars"></button></div>
+      </div>
+      <div class="set-group">
         <h3>Progress</h3>
         <div class="set-row"><span>Erase all three save slots</span><button class="danger" type="button" id="wipeAll">Reset all progress</button></div>
       </div>
@@ -640,17 +702,8 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
 
 <div class="modal" id="cosModal" hidden>
   <div class="modal-card cos-card" role="dialog" aria-modal="true" aria-labelledby="cosTitle">
-    <div class="sm-head"><h2 id="cosTitle">Mystery Box</h2><button class="xbtn" id="cosClose" type="button" aria-label="Close mystery box">&times;</button></div>
-    <div class="mbox-row">
-      <button class="mbox" id="mboxBtn" type="button" aria-label="Open a mystery box for 5 rainbow stars"><span class="mbox-lid"></span><span class="mbox-body">?</span></button>
-      <div class="mbox-info">
-        <b>Open a box: <i class="gcoin"></i>5</b>
-        <p id="mboxMsg">Every box holds a spooky cosmetic you don't have yet. Some are super rare, and the golden ones are the rarest of all!</p>
-        <div class="mbox-odds"><span class="rc">Common</span><span class="rr">Rare</span><span class="re">Epic</span><span class="rL">Golden</span></div>
-      </div>
-    </div>
-    <div class="mbox-reveal" id="mboxReveal" hidden></div>
-    <p class="cos-sub">Your collection. Hover to preview, click to equip.</p>
+    <div class="sm-head"><h2 id="cosTitle">Inventory</h2><button class="xbtn" id="cosClose" type="button" aria-label="Close inventory">&times;</button></div>
+<p class="cos-sub">Everything you've unboxed. Pick a slot, then click an item to put it on your rocket. Hover to preview.</p>
     <div class="cos-body">
       <canvas id="cosCv" aria-label="Your rocket with cosmetics"></canvas>
       <div class="cos-right">
@@ -804,8 +857,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   let state = fresh();
   const maxOf = k => (ALL.find(u => u.id === k) || {}).max || MAX;
   // Testing switch (Settings > Testing): every upgrade is affordable and buying costs nothing.
-  const isTestMoney = () => false; // the testing switch is gone: upgrades always cost coins
-  const coinText = () => '$' + (records.coins || 0).toLocaleString();
+  const isTestMoney = () => !!settings.infMoney; // settings cheat: upgrades cost nothing
+  const coinText = () => isTestMoney() ? '$\u221e' : '$' + (records.coins || 0).toLocaleString();
+  const starText = () => settings.infStars ? '\u221e' : String(records.gold || 0);
   const freshRecords = () => ({ best: 0, flights: 0, space: false, moon: false, day: 1, mode: 'launch', coins: 0, gold: 0 });
   let records = freshRecords();
 
@@ -1071,7 +1125,6 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     ]
   ];
   const PER_TIER = 3, TIER_EVERY = 8;
-  const TIER_STARS = [1, 1, 2, 3]; // rainbow stars per challenge, by tier
   const tierIdx = () => Math.min(CHALLENGE_TIERS.length - 1, Math.floor(rocketLv() / TIER_EVERY));
   const chalDone = id => !!(records.chal && records.chal[id]);
   const tierDoneCount = i => CHALLENGE_TIERS[i].filter(c => chalDone(c.id)).length;
@@ -1080,7 +1133,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     const i = tierIdx(), list = CHALLENGE_TIERS[i], done = tierDoneCount(i), full = done >= PER_TIER;
     const rows = list.map(c => {
       const d = chalDone(c.id), locked = !d && full;
-      return `<div class="chal${d ? ' done' : ''}${locked ? ' locked' : ''}"><i class="chk">${d ? '&#10003;' : ''}</i><span>${c.text}${c.goal ? ` (${c.goal})` : ''}</span><b><i class="coin"></i>${c.reward.toLocaleString()} <i class="gcoin"></i>${TIER_STARS[i]}</b></div>`;
+      return `<div class="chal${d ? ' done' : ''}${locked ? ' locked' : ''}"><i class="chk">${d ? '&#10003;' : ''}</i><span>${c.text}${c.goal ? ` (${c.goal})` : ''}</span><b><i class="coin"></i>${c.reward.toLocaleString()}</b></div>`;
     }).join('');
     const last = i === CHALLENGE_TIERS.length - 1;
     const foot = full ? (last ? 'Every challenge tier is done. Legend!' : `Tier done! ${PER_TIER} new challenges unlock at ${(i + 1) * TIER_EVERY} rocket upgrades (you have ${rocketLv()}).`)
@@ -1088,9 +1141,70 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     const teaser = !last ? `<div class="chal locked"><i class="chk">?</i><span>Tier ${i + 2}: ??? (unlocks at ${(i + 1) * TIER_EVERY} rocket upgrades)</span><b>???</b></div>` : '';
     return `<div class="chal-head"><b>Challenges · Tier ${i + 1}</b><span>${done}/${PER_TIER} done</span></div><div class="chal-list">${rows}${compact ? '' : teaser}</div>${compact ? '' : `<p class="chal-foot">${foot}</p>`}`;
   }
+  // ---------- Rainbow Star Challenges: the only way to earn stars ----------
+  // Three are active at a time (easy, medium, hard when possible). Finish one and a new one takes its place.
+  const STAR_CHALLENGES = [
+    { id: 's_smash5', stars: 1, text: 'Smash 5 things in one flight', goal: 5, prog: f => f.smashed },
+    { id: 's_stars15', stars: 1, text: 'Grab 15 stars in one flight', goal: 15, prog: f => f.stars },
+    { id: 's_close3', stars: 1, text: 'Get 3 close calls in one flight', goal: 3, prog: f => f.closeCalls },
+    { id: 's_bird2', stars: 1, text: 'Smash 2 birds in one flight', goal: 2, prog: f => f.broke.bird },
+    { id: 's_balloon', stars: 1, text: 'Pop a hot air balloon', check: f => f.broke.balloon >= 1 },
+    { id: 's_fly35', stars: 1, text: 'Stay in the air for 35 seconds', check: f => f.ft >= 35 && f.left },
+    { id: 's_rings2', stars: 1, text: 'Fly through 2 boost rings in one flight', goal: 2, prog: f => f.rings, req: b => b >= 1500 },
+    { id: 's_alt10k', stars: 2, text: 'Reach 10 km', check: f => f.maxAlt >= 10000, req: b => b >= 4000 },
+    { id: 's_clean6k', stars: 2, text: 'Reach 6 km without getting hit', check: f => f.hits === 0 && f.maxAlt >= 6000, req: b => b >= 4000 },
+    { id: 's_drone2', stars: 2, text: 'Destroy 2 drones in one flight', goal: 2, prog: f => f.broke.drone, req: b => b >= 3000 },
+    { id: 's_plane2', stars: 2, text: 'Destroy 2 planes in one flight', goal: 2, prog: f => f.broke.plane, req: b => b >= 3000 },
+    { id: 's_close8', stars: 2, text: 'Get 8 close calls in one flight', goal: 8, prog: f => f.closeCalls, req: b => b >= 3000 },
+    { id: 's_rings6', stars: 2, text: 'Fly through 6 boost rings in one flight', goal: 6, prog: f => f.rings, req: b => b >= 6000 },
+    { id: 's_stars40', stars: 2, text: 'Grab 40 stars in one flight', goal: 40, prog: f => f.stars, req: b => b >= 5000 },
+    { id: 's_spacefuel', stars: 2, text: 'Reach space with half your fuel left', check: f => f.maxAlt >= P.SPACE && f.fuel >= f.st.fuel * 0.5, req: b => b >= 8000 },
+    { id: 's_clean20k', stars: 3, text: 'Reach 20 km without getting hit', check: f => f.hits === 0 && f.maxAlt >= 20000, req: b => b >= 15000 },
+    { id: 's_rush', stars: 3, text: 'Win a Fuel Rush', check: f => !!f.eventWin, req: b => b >= 10000 },
+    { id: 's_close20', stars: 3, text: 'Get 20 close calls in one flight', goal: 20, prog: f => f.closeCalls, req: b => b >= 10000 },
+    { id: 's_deep', stars: 3, text: 'Reach Deep Space (40 km)', check: f => f.maxAlt >= DEEP_LO, req: b => b >= 20000 },
+    { id: 's_ufo', stars: 3, text: 'Destroy a UFO', check: f => (f.broke.ufo || 0) >= 1, req: b => b >= 20000 },
+    { id: 's_stars80', stars: 3, text: 'Grab 80 stars in one flight', goal: 80, prog: f => f.stars, req: b => b >= 20000 },
+    { id: 's_dock', stars: 3, text: 'Fly through the space station ring', check: f => !!f.docked, req: b => b >= 25000 },
+    { id: 's_alt100k', stars: 3, text: 'Reach 100 km', check: f => f.maxAlt >= 100000, req: b => b >= 60000 },
+    { id: 's_moon', stars: 3, text: 'Land on the Moon', check: f => f.end === 'moon', req: b => b >= 150000 }
+  ];
+  const starCh = id => STAR_CHALLENGES.find(c => c.id === id);
+  const starDoneId = id => !!(records.starDone && records.starDone[id]);
+  function ensureStarCh() {
+    records.starDone = records.starDone || {};
+    let act = (records.starCh || []).filter(id => starCh(id) && !starDoneId(id));
+    while (act.length < 3) {
+      const cands = STAR_CHALLENGES.filter(c => !starDoneId(c.id) && !act.includes(c.id) && (!c.req || c.req(records.best || 0)));
+      if (!cands.length) break;
+      const have = act.map(id => starCh(id).stars), want = [1, 2, 3].find(s => !have.includes(s) && cands.some(c => c.stars === s));
+      act.push((cands.find(c => c.stars === want) || cands[0]).id);
+    }
+    records.starCh = act;
+    return act.map(starCh);
+  }
+  const starIcons = n => '<i class="gcoin"></i>'.repeat(n);
+  function starChalHTML(compact) {
+    const list = ensureStarCh();
+    const rows = list.map(c => `<div class="chal star-chal"><i class="chk"></i><span>${c.text}</span><b class="sreward">${starIcons(c.stars)}</b></div>`).join('')
+      || '<div class="chal"><span>You finished every Rainbow Star Challenge. Amazing!</span></div>';
+    return `<div class="chal-head star-head"><b>Rainbow Star Challenges</b><span>${Object.keys(records.starDone || {}).length} done</span></div><div class="chal-list">${rows}</div>`
+      + (compact ? '' : '<p class="chal-foot">These pay rainbow stars instead of cash: harder ones give more. Finish one and a new one appears. Spend stars on Mystery Boxes.</p>');
+  }
+  function checkStarChallenges(f) {
+    for (const id of (records.starCh || [])) {
+      const c = starCh(id);
+      if (!c || starDoneId(id) || !chalMet(c, f)) continue;
+      records.starDone[id] = records.day;
+      f.starDone.push(c); f.starsEarned = (f.starsEarned || 0) + c.stars;
+      floats.push({ text: `RAINBOW STAR CHALLENGE! +${c.stars}`, x: VW / 2, y: (BASE - yOff) / 2 - 190, life: 2, max: 2, color: '#ff9ae8' });
+      floats.push({ text: c.text, x: VW / 2, y: (BASE - yOff) / 2 - 152, life: 2, max: 2, color: '#fff3dc' });
+      Sound.gold();
+    }
+  }
   function renderChal() {
-    document.getElementById('shopChal').innerHTML = chalHTML(true);
-    document.getElementById('chalBoard').innerHTML = chalHTML(false);
+    document.getElementById('shopChal').innerHTML = chalHTML(true) + starChalHTML(true);
+    document.getElementById('chalBoard').innerHTML = chalHTML(false) + starChalHTML(false);
     const i = tierIdx(), left = PER_TIER - tierDoneCount(i);
     document.getElementById('chalBadge').textContent = left > 0 ? `${left} left` : '';
   }
@@ -1101,7 +1215,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       if (chalDone(c.id) || !chalMet(c, f)) continue;
       records.chal = records.chal || {};
       records.chal[c.id] = records.day;
-      f.chalDone.push(c); f.starsEarned = (f.starsEarned || 0) + TIER_STARS[i];
+      f.chalDone.push(c);
       floats.push({ text: 'CHALLENGE DONE!', x: VW / 2, y: (BASE - yOff) / 2 - 150, life: 1.8, max: 1.8, color: '#3ee6b0' });
       floats.push({ text: c.text, x: VW / 2, y: (BASE - yOff) / 2 - 112, life: 1.8, max: 1.8, color: '#fff3dc' });
       Sound.gold();
@@ -1122,6 +1236,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     document.body.classList.toggle('mode-intro', m === 'intro');
     document.body.classList.toggle('mode-shop', m === 'shop');
     document.body.classList.toggle('mode-launch', m === 'launch');
+    document.body.classList.toggle('mode-box', m === 'box');
   }
   function setMode(m) {
     records.mode = m === 'shop' ? 'shop' : 'launch'; saveRecords();
@@ -1178,9 +1293,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     document.getElementById('infBtn').hidden = !records.moon;
     renderChal();
     document.getElementById('coinBadge').lastChild.textContent = coinText();
-    document.getElementById('goldBadge').lastChild.textContent = String(records.gold || 0);
+    document.getElementById('goldBadge').lastChild.textContent = starText();
     document.getElementById('walletCoins').textContent = coinText();
-    document.getElementById('walletGold').textContent = String(records.gold || 0);
+    document.getElementById('walletGold').textContent = starText();
     if (slotIdx >= 0 && slots[slotIdx]) document.getElementById('pilotTag').textContent = `${slots[slotIdx].name}'s garage`;
     document.getElementById('shopSub').textContent = `Day ${records.day} done. Pick your upgrades.`;
     renderShopSide();
@@ -1194,7 +1309,8 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     ['nextDayBtn'].forEach(id => { document.getElementById(id).textContent = `Start day ${records.day + 1}`; });
     document.getElementById('boostBtn').hidden = !state.pad;
     if (!records.boxSeen && (records.gold || 0) > 0) { records.boxSeen = true; save(); setTimeout(() => toast('You got your first rainbow star! The MYSTERY BOX is unlocked.'), 400); }
-    document.getElementById('cosBtn').hidden = !boxUnlocked(); if (!flight) document.getElementById('cosBtn2').hidden = !boxUnlocked();
+    ['cosBtn', 'invBtn'].forEach(id => { document.getElementById(id).hidden = !boxUnlocked(); });
+    if (!flight) ['cosBtn2', 'invBtn2'].forEach(id => { document.getElementById(id).hidden = !boxUnlocked(); });
     document.getElementById('bestLine').textContent = records.flights ? `Best flight: ${fmtAlt(records.best)}` : 'No flights yet';
     document.getElementById('peakBadge').textContent = fmtRange(st.peakLo, st.peakHi);
     document.getElementById('mkChip').textContent = 'MK ' + (rocketLv() + 1);
@@ -2639,7 +2755,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     flight = { phase: 'countdown', cd: 0, marks: 0, autoT: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
       maxAlt: 0, maxSpd: 0, reached: false, closest: Infinity, trail: [], hide: false, end: null, burning: false, screen: { x: rx(), y: GROUND },
       emptyT: -1, power: 1, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
-      smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: Math.random() < 0.1 ? simPeak(st) * (0.45 + Math.random() * 0.4) : -1, gold: null, gotGold: false,
+      smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: -1, starDone: [], gold: null, gotGold: false,
       chaos: 1 - handlingOf(state),
       kick: 0, kickT: 1, jamT: 0, sputT: 0, ph1: Math.random() * 6, ph2: Math.random() * 6 };
     clouds = []; for (let i = 0; i < 80; i++) clouds.push({ x: (Math.random() - 0.5) * 16000, y: 700 + Math.random() * 6800, s: 0.7 + Math.random() * 0.8 });
@@ -2652,7 +2768,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     }
     $('hHullPill').hidden = !opts.infinite;
     document.body.classList.add('flying');
-    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = $('cosBtn2').hidden = true;
+    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = $('cosBtn2').hidden = $('invBtn2').hidden = true;
     closeModel();
     ui.hud.hidden = ui.ctls.hidden = ui.abort.hidden = false; ui.meter.hidden = true;
     if (window.innerWidth <= 860) cv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2667,7 +2783,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     flight = null; parts = []; floats = []; starShift = { x: 0, y: 0 }; thr = 0;
     document.body.classList.remove('flying');
     ui.report.hidden = ui.hud.hidden = ui.ctls.hidden = ui.abort.hidden = true;
-    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = false; $('cosBtn2').hidden = !boxUnlocked();
+    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = false; $('cosBtn2').hidden = $('invBtn2').hidden = !boxUnlocked();
     renderUI();
     $('launchBtn').focus({ preventScroll: true });
   }
@@ -2712,7 +2828,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     return records.own;
   }
   const isOwned = (slot, id) => id === 'none' || !!owned()[slot + ':' + id];
-  function boxUnlocked() { return !!(records.boxSeen || (records.gold || 0) > 0 || Object.keys(owned()).length); }
+  function boxUnlocked() { return !!(settings.infStars || records.boxSeen || (records.gold || 0) > 0 || Object.keys(owned()).length); }
   function boxPool() {
     const pool = [];
     for (const [slot, c] of Object.entries(COSMETICS)) for (const it of c.items) if (it.id !== 'none' && !isOwned(slot, it.id)) pool.push({ slot, it });
@@ -2734,40 +2850,123 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       const tag = it.id === eq ? 'EQUIPPED' : it.r ? RARITY[it.r].name : 'Default';
       return `<button type="button" class="cos-tile${it.id === eq ? ' on' : ''}" data-id="${it.id}"><span class="sw${it.r === 'L' ? ' L' : ''}" style="background:${it.sw}"></span><span><b>${it.name}</b><small${it.id === eq || !it.r ? '' : ` class="r${it.r}"`}>${tag}</small></span></button>`;
     }).join('');
-    const left = boxPool().length, stars = records.gold || 0;
-    $('mboxBtn').disabled = boxBusy || !left;
-    if (!boxBusy) $('mboxMsg').textContent = !left ? 'You collected every cosmetic. Legend!'
-      : stars >= BOX_COST ? `You have ${stars} rainbow stars. Click the box to open it! (${left} cosmetics left to find)`
-      : `You have ${stars} rainbow star${stars === 1 ? '' : 's'}. Earn ${BOX_COST - stars} more from challenges, the space station, Fuel Rushes, or just by playing.`;
   }
-  $('mboxBtn').addEventListener('click', () => {
-    if (boxBusy || !boxPool().length) return;
-    const b = $('mboxBtn');
-    if ((records.gold || 0) < BOX_COST) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); renderCos(); return; }
-    records.gold -= BOX_COST; boxBusy = true; save(); renderUI();
-    const won = rollBox();
-    owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save();
-    $('mboxReveal').hidden = true; $('mboxMsg').textContent = 'Opening...';
-    b.classList.remove('pop'); b.classList.add('shake'); Sound.count(false);
-    setTimeout(() => {
-      b.classList.remove('shake'); b.classList.add('pop');
-      const r = won.it.r, rv = $('mboxReveal');
-      rv.className = 'mbox-reveal ' + r; rv.hidden = false;
-      rv.innerHTML = `<span class="sw" style="background:${won.it.sw}"></span><div><small class="r${r}">${r === 'L' ? '&#9733; GOLDEN! SUPER RARE! &#9733;' : RARITY[r].name.toUpperCase()} · ${COSMETICS[won.slot].label}</small><b>${won.it.name}</b><small>Equipped on your rocket!</small></div>`;
-      if (r === 'L' || r === 'e') Sound.gold(); else Sound.upgrade();
-      cosTab = won.slot; cosView = null; boxBusy = false; renderCos();
-      setTimeout(() => b.classList.remove('pop'), 900);
-    }, 1150);
-  });
-  function openCos() {
+
+  // ---------- Mystery Box screen ----------
+  let boxPrev = 'shop', boxAnim = { phase: 'idle', t: 0, won: null }, boxSparks = [];
+  const RCOL = { c: '#c9d2e6', r: '#58c4ff', e: '#c77dff', L: '#ffcf33' };
+  const canRoll = () => settings.infStars || (records.gold || 0) >= BOX_COST;
+  function openBox() {
     if (flight) return;
-    cosOpen = true; $('mboxReveal').hidden = true; renderCos();
+    closeCos(); boxPrev = screen === 'box' ? boxPrev : screen; showScreen('box');
+    if (boxAnim.phase !== 'shake') boxAnim = { phase: 'idle', t: 0, won: null };
+    $('boxResult').hidden = true; renderBox(); window.scrollTo(0, 0);
+  }
+  function closeBox() { if (boxAnim.phase === 'shake') return; showScreen(boxPrev === 'box' ? 'shop' : boxPrev); renderUI(); }
+  function renderBox() {
+    const left = boxPool().length, stars = records.gold || 0, busy = boxAnim.phase === 'shake';
+    $('boxStars').textContent = starText();
+    $('rollBtn').disabled = busy || !left;
+    $('rollBtn').classList.toggle('broke', !canRoll());
+    $('boxMsg').textContent = busy ? 'Here it comes...' : !left ? 'You collected every cosmetic. Legend!'
+      : canRoll() ? `${left} cosmetic${left === 1 ? '' : 's'} left to find. Golden ones are super rare!`
+      : `You need ${BOX_COST - stars} more rainbow star${BOX_COST - stars === 1 ? '' : 's'}. Finish Rainbow Star Challenges to earn them.`;
+  }
+  $('rollBtn').addEventListener('click', () => {
+    if (boxAnim.phase === 'shake' || !boxPool().length) return;
+    const b = $('rollBtn');
+    if (!canRoll()) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+    if (!settings.infStars) records.gold -= BOX_COST;
+    const won = rollBox();
+    owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save(); renderUI();
+    boxAnim = { phase: 'shake', t: 0, won, ticks: 0 }; $('boxResult').hidden = true; Sound.click(); renderBox();
+  });
+  $('boxBack').addEventListener('click', () => { Sound.click(); closeBox(); });
+  $('boxInv').addEventListener('click', () => { Sound.click(); openCos(); });
+  window.addEventListener('keydown', e => { if (e.key === 'Escape' && screen === 'box' && !cosOpen) closeBox(); });
+  function boxReveal() {
+    const { won } = boxAnim, r = won.it.r, el = $('boxResult');
+    el.className = 'box-result r-' + r; el.hidden = false;
+    el.innerHTML = `<small class="r${r}">${r === 'L' ? '&#9733; GOLDEN! SUPER RARE! &#9733;' : RARITY[r].name.toUpperCase()} · ${COSMETICS[won.slot].label}</small><b>${won.it.name}</b><span>It's on your rocket now. Swap it any time in your Inventory.</span>`;
+    if (r === 'L' || r === 'e') Sound.gold(); else Sound.upgrade();
+    Sound.boing(); shakeT = 0.25;
+    const n = r === 'L' ? 90 : r === 'e' ? 50 : 30;
+    for (let i = 0; i < n; i++) { const a = Math.random() * Math.PI * 2, s = 2 + Math.random() * (r === 'L' ? 9 : 6); boxSparks.push({ x: 0, y: 0, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 3, life: 1.6, c: r === 'L' ? ['#ffcf33', '#fff3a8', '#ffb21a'][i % 3] : [RCOL[r], '#fff3dc', '#ff9ae8'][i % 3] }); }
+    renderBox();
+  }
+  function drawBigBox(x, y, s, lidY, lidRot, glow, t, lidX = 0) {
+    const W = 170 * s, H = 120 * s;
+    if (glow) { ctx.save(); ctx.shadowColor = glow; ctx.shadowBlur = 40; ctx.fillStyle = glow; ctx.fillRect(x - W / 2 + 6, y - H + 8, W - 12, 6); ctx.restore(); }
+    // body
+    box(x - W / 2, y - H, W, H, '#7a35d6', 14 * s, 4);
+    ctx.fillStyle = '#5a2d82'; ctx.fillRect(x - W / 2 + 4, y - H * 0.35, W - 8, H * 0.35 - 4);
+    box(x - 14 * s, y - H, 28 * s, H, '#ffcf33', 0, 3);
+    ctx.font = `${60 * s}px 'Lilita One', sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.strokeText('?', x - W * 0.27, y - H * 0.5); ctx.strokeText('?', x + W * 0.27, y - H * 0.5);
+    ctx.fillStyle = '#fff3dc'; ctx.fillText('?', x - W * 0.27, y - H * 0.5 + Math.sin(t * 3) * 2); ctx.fillText('?', x + W * 0.27, y - H * 0.5 + Math.sin(t * 3 + 1) * 2);
+    // lid + bow
+    ctx.save(); ctx.translate(x + lidX, y - H - 4 + lidY); ctx.rotate(lidRot);
+    box(-W / 2 - 12 * s, -34 * s, W + 24 * s, 38 * s, '#a14dff', 12 * s, 4);
+    box(-14 * s, -34 * s, 28 * s, 38 * s, '#ffcf33', 0, 3);
+    [-1, 1].forEach(k => { ctx.beginPath(); ctx.ellipse(k * 26 * s, -48 * s, 26 * s, 15 * s, k * 0.5, 0, 7); ctx.fillStyle = '#ffcf33'; ctx.fill(); strokeInk(3.5); });
+    dot(0, -44 * s, 11 * s, '#ffb21a'); strokeInk(3);
+    ctx.restore();
+  }
+  function drawBoxScreen(t, dt) {
+    const a = boxAnim; a.t += dt;
+    if (a.phase === 'shake') {
+      const ticks = Math.floor(a.t / 0.28); if (ticks > a.ticks) { a.ticks = ticks; Sound.count(false); }
+      if (a.t >= 1.9) { a.phase = 'open'; a.t = 0; boxReveal(); }
+    }
+    withCanvas($('boxCv'), (w, h) => {
+      const cx = w / 2, by = h - 40, s = clamp(Math.min(w / 520, h / 420), 0.55, 1.3);
+      const r = a.won ? a.won.it.r : null, col = r ? RCOL[r] : '#c77dff';
+      // spotlight
+      const g = ctx.createRadialGradient(cx, by - 80 * s, 10, cx, by - 80 * s, Math.max(w, h) * 0.6);
+      g.addColorStop(0, a.phase === 'open' ? col + '55' : 'rgba(199,125,255,.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      ctx.beginPath(); ctx.ellipse(cx, by + 6, 130 * s, 18 * s, 0, 0, 7); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill();
+      if (a.phase === 'idle') {
+        drawBigBox(cx, by - Math.abs(Math.sin(t * 2)) * 8 * s, s, 0, 0, null, t);
+      } else if (a.phase === 'shake') {
+        const k = a.t / 1.9, amp = 2 + k * k * 12;
+        ctx.save(); ctx.translate(cx + Math.sin(a.t * 60) * amp * s, by); ctx.rotate(Math.sin(a.t * 45) * 0.04 * (0.5 + k * 2));
+        drawBigBox(0, 0, s, -Math.max(0, Math.sin(a.t * 30)) * k * 8, 0, k > 0.4 ? col : null, t);
+        ctx.restore();
+        if (Math.random() < k) boxSparks.push({ x: (Math.random() - 0.5) * 160 * s, y: -130 * s, vx: (Math.random() - 0.5) * 3, vy: -2 - Math.random() * 3, life: 0.8, c: col });
+      } else {
+        const e = Math.min(1, a.t / 0.6);
+        // light rays
+        ctx.save(); ctx.translate(cx, by - 150 * s); ctx.rotate(t * 0.4);
+        const rays = r === 'L' ? 18 : 12;
+        for (let i = 0; i < rays; i++) { ctx.rotate(Math.PI * 2 / rays); ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-22 * s, -Math.max(w, h)); ctx.lineTo(22 * s, -Math.max(w, h)); ctx.closePath(); ctx.fillStyle = col + (r === 'L' ? '40' : '26'); ctx.fill(); }
+        ctx.restore();
+        drawBigBox(cx, by, s, -e * h, -e * 3, col, t, e * w * 0.7);
+        // the prize: your rocket wearing it pops up out of the box
+        const up = Math.min(1, a.t / 0.5), G = geom(state);
+        const ry = by - 110 * s - up * 30 * s + Math.sin(t * 2) * 4;
+        const rs = Math.min((ry - 130) / (-G.tip + 40), 1.6) * (0.3 + 0.7 * up);
+        ctx.save(); thr = 0.7; ctx.translate(cx, ry); ctx.scale(rs, rs);
+        drawRocket(t, G, { x: Math.sin(t) * 0.6, y: -0.3 }, false); ctx.restore();
+      }
+      // sparks
+      ctx.save(); ctx.translate(cx, by - 150 * s);
+      boxSparks.forEach(p => { p.x += p.vx * dt * 60; p.y += p.vy * dt * 60; p.vy += 0.12 * dt * 60; p.life -= dt; ctx.globalAlpha = clamp(p.life, 0, 1); drawSpookyStar(p.x, p.y, 6 * s, p.c); });
+      ctx.restore(); ctx.globalAlpha = 1;
+      boxSparks = boxSparks.filter(p => p.life > 0);
+    });
+  }
+  function openCos() {
+    if (flight || (screen === 'box' && boxAnim.phase === 'shake')) return;
+    cosOpen = true; renderCos();
     const m = $('cosModal'); m.hidden = false; placeNearPointer(m.querySelector('.modal-card'));
     $('cosClose').focus({ preventScroll: true });
   }
   function closeCos() { cosOpen = false; cosView = null; $('cosModal').hidden = true; }
-  $('cosBtn').addEventListener('click', () => { Sound.click(); openCos(); });
-  $('cosBtn2').addEventListener('click', () => { Sound.click(); openCos(); });
+  $('cosBtn').addEventListener('click', () => { Sound.click(); openBox(); });
+  $('cosBtn2').addEventListener('click', () => { Sound.click(); openBox(); });
+  $('invBtn').addEventListener('click', () => { Sound.click(); openCos(); });
+  $('invBtn2').addEventListener('click', () => { Sound.click(); openCos(); });
   $('cosClose').addEventListener('click', closeCos);
   $('cosModal').addEventListener('click', e => { if (e.target.id === 'cosModal') closeCos(); });
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && cosOpen) closeCos(); });
@@ -2981,7 +3180,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     }
     f.maxAlt = Math.max(f.maxAlt, alt);
     f.maxSpd = Math.max(f.maxSpd, Math.hypot(f.vx, f.vy));
-    if (!f.infinite) checkChallenges(f);
+    if (!f.infinite) { checkChallenges(f); checkStarChallenges(f); }
     if (!f.reached && alt >= P.SPACE) {
       f.reached = true; f.phase = 'space'; ui.meter.hidden = false;
       floats.push({ text: 'WELCOME TO SPACE!', x: VW / 2, y: (BASE - yOff) / 2 - 60, life: 2.2, max: 2.2, color: '#3ee6b0' });
@@ -3023,9 +3222,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     records.flights++;
     records.best = Math.max(records.best, f.maxAlt);
     if (f.reached) records.space = true;
-    if (kind === 'moon') { if (!records.moon) f.starsEarned = (f.starsEarned || 0) + 5; records.moon = true; }
+    if (kind === 'moon') records.moon = true;
     // Pay day: coins for height plus bonuses. You only see this on the report.
-    checkChallenges(f);
+    checkChallenges(f); if (!f.infinite) checkStarChallenges(f);
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
     const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 8 : 250 + (alt - 2000) / 20);
     const earn = { height: heightPay, space: f.reached ? 250 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 3,
@@ -3034,8 +3233,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
     f.earn = earn;
     records.coins = (records.coins || 0) + earn.total;
-    if (f.gotGold) f.starsEarned = (f.starsEarned || 0) + 1;
-    records.gold = (records.gold || 0) + (f.starsEarned || 0);
+    records.gold = (records.gold || 0) + (f.starsEarned || 0); ensureStarCh();
     saveRecords();
     const isRec = f.maxAlt > prevBest && f.maxAlt > 1;
     if (kind === 'moon') setTimeout(() => { if (flight === f) playOutro(() => { showScreen('launch'); showReport(f, isRec); }); }, 900);
@@ -3099,8 +3297,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     $('repEarn').innerHTML = `<h3>Today's pay</h3>${lines.map(([k, v]) => `<div class="eline"><span>${k}</span><b>+${v.toLocaleString()}</b></div>`).join('')}`
       + `<div class="etotal"><span>Total</span><b><i class="coin"></i><span id="earnCount">0</span></b></div>`
       + f.chalDone.map(c => `<div class="echal">&#10003; ${c.text}</div>`).join('')
+      + (f.starDone || []).map(c => `<div class="echal estar">${starIcons(c.stars)} ${c.text}</div>`).join('')
       + (f.gotGold ? '<div class="egold"><i class="gcoin"></i>You found a RAINBOW STAR!</div>' : '')
-      + (f.starsEarned ? `<div class="egold"><i class="gcoin"></i>+${f.starsEarned} rainbow star${f.starsEarned === 1 ? '' : 's'} today</div>` : '')
+      + (f.starsEarned ? `<div class="egold"><i class="gcoin"></i>+${f.starsEarned} rainbow star${f.starsEarned === 1 ? '' : 's'} today! Spend them on Mystery Boxes.</div>` : '')
       + (f.end === 'moon' && !records.infShown ? (records.infShown = true, saveRecords(), '<div class="egold">INFINITE MODE UNLOCKED! Find it on the launch pad.</div>') : '')
 ;
     ui.report.hidden = false;
@@ -3735,7 +3934,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       if (!st.done && active && !f.hide && st.y >= ry) {
         st.done = true;
         if (Math.abs(pts[1].x - st.gx) < st.gap / 2 - hitR * 0.6) {
-          f.docked = true; f.power = Math.min(1.5, f.power + 0.15); f.starsEarned = (f.starsEarned || 0) + 1;
+          f.docked = true; f.power = Math.min(1.5, f.power + 0.15);
           burst(st.gx, st.y, ['#58c4ff', '#3ee6b0', '#fff3dc', '#ffcf33'], 50, 8); Sound.gold(); shakeT = 0.3;
           shout('DOCKED! +15% POWER', st.gx, st.y - 50, '#3ee6b0', 1.8);
         } else {
@@ -3792,9 +3991,9 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
       const ev = f.event;
       ev.got = ev.count(f) - ev.base;
       if (ev.got >= ev.goal) {
-        f.eventWin = ev.reward; f.event = null; f.fx.inf = 0; f.starsEarned = (f.starsEarned || 0) + 1;
+        f.eventWin = ev.reward; f.event = null; f.fx.inf = 0;
         Sound.gold(); burst(pts[1].x, pts[1].y - 60, ['#ffcf33', '#3ee6b0', '#fff3dc'], 40, 8);
-        shout(`RUSH COMPLETE! +$${ev.reward} +1 STAR`, VW / 2, (BASE - yOff) / 2 - 150, '#3ee6b0', 2);
+        shout(`RUSH COMPLETE! +$${ev.reward}`, VW / 2, (BASE - yOff) / 2 - 150, '#3ee6b0', 2);
       } else if (f.fx.inf <= 0) {
         f.event = null; Sound.nope();
         shout('TIME UP!', VW / 2, (BASE - yOff) / 2 - 150, '#ff5a5f', 1.6);
@@ -4196,12 +4395,12 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
   // settings panel
   function renderSettings() {
     $m('setVol').value = settings.volume;
-    [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).setAttribute('aria-pressed', String(!!settings[k])));
+    [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake'], ['setInfMoney', 'infMoney'], ['setInfStars', 'infStars']].forEach(([id, k]) => $m(id).setAttribute('aria-pressed', String(!!settings[k])));
     [['setThrust', 'thrustMode'], ['setFx', 'fx']].forEach(([id, k]) => $m(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === settings[k]))));
   }
   $m('setVol').addEventListener('input', e => { settings.volume = +e.target.value; saveSettings(); Sound.setVolume(); });
   $m('setVol').addEventListener('change', () => Sound.click());
-  [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).addEventListener('click', () => {
+  [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake'], ['setInfMoney', 'infMoney'], ['setInfStars', 'infStars']].forEach(([id, k]) => $m(id).addEventListener('click', () => {
     settings[k] = !settings[k]; saveSettings(); renderSettings(); Sound.click(); renderUI();
   }));
   [['setThrust', 'thrustMode'], ['setFx', 'fx']].forEach(([id, k]) => $m(id).addEventListener('click', e => {
@@ -4814,15 +5013,7 @@ i.gcoin { display: inline-block !important; width: 17px !important; height: 17px
     }
     if (tut) drawTut(t);
     if (cosOpen) drawCosPreview(t);
-    if (slotIdx >= 0 && screen !== 'menu' && screen !== 'intro') {
-      records.playSecs = (records.playSecs || 0) + dt;
-      if (records.nextStar == null) records.nextStar = 180 + Math.random() * 120;
-      if (records.playSecs >= records.nextStar) {
-        records.nextStar = records.playSecs + 180 + Math.random() * 120;
-        records.gold = (records.gold || 0) + 1; save(); renderUI();
-        Sound.gold(); toast('+1 RAINBOW STAR for playing! Thanks for flying.');
-      }
-    }
+    if (screen === 'box') drawBoxScreen(t, dt);
   }
 
   function start(data) {
