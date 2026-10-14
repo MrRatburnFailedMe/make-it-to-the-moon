@@ -427,6 +427,16 @@ body:not(.mode-intro) .intro { display: none; }
 .launch.inf-btn { background: linear-gradient(135deg, #8a3dff, #ff5a5f); font-size: 18px; }
 .pill.hull b { color: var(--hot); letter-spacing: 2px; }
 
+/* currency icons: a green dollar bill for cash, a rainbow star for stars */
+i.coin { display: inline-block !important; position: relative; width: 20px !important; height: 12px !important; border-radius: 2px !important;
+  background: linear-gradient(#6fd66f, #3f9e4a) !important; border: 2px solid var(--ink) !important; vertical-align: -1px; margin-right: 4px !important; box-shadow: none !important; }
+i.coin::after { content: '$'; position: absolute; inset: 0; display: grid; place-items: center; font: 900 9px/1 'Baloo 2', system-ui, sans-serif; color: #eaffea; }
+i.gcoin { display: inline-block !important; width: 17px !important; height: 17px !important; border: 0 !important; border-radius: 0 !important; vertical-align: -3px; margin-right: 3px !important;
+  background: conic-gradient(#ff5a5f, #ff9a3c, #ffcf33, #3ee6b0, #58c4ff, #c77dff, #ff7ad9, #ff5a5f) !important; box-shadow: none !important;
+  clip-path: polygon(50% 0%, 62% 35%, 99% 36%, 69% 58%, 80% 94%, 50% 72%, 20% 94%, 31% 58%, 1% 36%, 38% 35%); }
+.wallet i.gcoin { width: 22px !important; height: 22px !important; }
+.coins.goldc { color: #ff9ae8; }
+
 @media (prefers-reduced-motion: reduce) {
   .card.bump { animation: none; }
   .bar i { transition: none; }
@@ -436,6 +446,7 @@ body:not(.mode-intro) .intro { display: none; }
 </head>
 <body>
 
+
 <div class="app">
   <header class="top">
     <div>
@@ -444,8 +455,8 @@ body:not(.mode-intro) .intro { display: none; }
     </div>
     <div class="top-right">
     <button class="menu-link" type="button" id="toMenu">Menu</button>
-    <span class="coins" id="coinBadge" title="Coins"><i class="coin"></i>0</span>
-    <span class="coins goldc" id="goldBadge" title="Gold coins"><i class="gcoin"></i>0</span>
+    <span class="coins" id="coinBadge" title="Cash"><i class="coin"></i>0</span>
+    <span class="coins goldc" id="goldBadge" title="Rainbow stars"><i class="gcoin"></i>0</span>
     <div class="progress" aria-label="Upgrade progress">
       <span class="day" id="dayBadge">DAY 1</span>
       <span id="progText">0 / 35 upgrades</span>
@@ -513,7 +524,7 @@ body:not(.mode-intro) .intro { display: none; }
       <div class="shop-title"><h2>The Shop</h2><p id="shopSub">Upgrade, then launch again.</p></div>
       <button class="btn next-day" type="button" id="nextDayBtn">Start day 2</button>
       <button class="btn cos-open" type="button" id="cosBtn">Cosmetic Shop</button>
-      <div class="wallet"><span class="wcoins"><i class="coin"></i><b id="walletCoins">0</b></span><span class="wgold" title="Gold coins"><i class="gcoin"></i><b id="walletGold">0</b></span></div>
+      <div class="wallet"><span class="wcoins"><i class="coin"></i><b id="walletCoins">0</b></span><span class="wgold" title="Rainbow stars"><i class="gcoin"></i><b id="walletGold">0</b></span></div>
       <div class="ship-box"><canvas id="shopShip" aria-label="Your rocket"></canvas><span class="ship-label" id="shipLabel">MK 1</span></div>
       <div class="meters" id="shopMeters"></div>
       <p class="fly-line" id="shopFly"></p>
@@ -526,7 +537,7 @@ body:not(.mode-intro) .intro { display: none; }
       <div class="mystery" id="baseMystery" hidden></div>
       <div class="cards" id="stationCards"></div>
       <div class="foot">
-        <span>Earn coins by flying higher. Gold coins are rare finds up high.</span>
+        <span>Earn cash by flying higher. Rainbow stars come from special challenges, rare finds, and time spent playing.</span>
         <button class="reset" id="resetBtn" type="button">Reset this save</button>
       </div>
     </div>
@@ -742,7 +753,7 @@ body:not(.mode-intro) .intro { display: none; }
       ['Twin Pistons', 'Heavy-duty springs with hydraulic pistons.'],
       ['Hyper Coil', 'A glowing energy coil. Starts you way up in the sky.']
     ], futureCost: [800, 3500, 7150, 18200] };
-  const PAD_V = [0, 90, 160, 240, 340]; // upward speed (m/s) the spring gives you
+  const PAD_V = [0, 200, 340, 500, 700]; // upward speed (m/s) the spring gives you
   const ALL = [...UPGRADES, STATION, DISH, PAD];
   ALL.forEach(u => { u.max = u.max || MAX; u.cost = u.futureCost.slice(0, u.max); }); // prices in coins
 
@@ -751,7 +762,7 @@ body:not(.mode-intro) .intro { display: none; }
   const maxOf = k => (ALL.find(u => u.id === k) || {}).max || MAX;
   // Testing switch (Settings > Testing): every upgrade is affordable and buying costs nothing.
   const isTestMoney = () => false; // the testing switch is gone: upgrades always cost coins
-  const coinText = () => isTestMoney() ? '\u221e' : (records.coins || 0).toLocaleString();
+  const coinText = () => '$' + (records.coins || 0).toLocaleString();
   const freshRecords = () => ({ best: 0, flights: 0, space: false, moon: false, day: 1, mode: 'launch', coins: 0, gold: 0 });
   let records = freshRecords();
 
@@ -1017,6 +1028,7 @@ body:not(.mode-intro) .intro { display: none; }
     ]
   ];
   const PER_TIER = 3, TIER_EVERY = 8;
+  const TIER_STARS = [1, 1, 2, 3]; // rainbow stars per challenge, by tier
   const tierIdx = () => Math.min(CHALLENGE_TIERS.length - 1, Math.floor(rocketLv() / TIER_EVERY));
   const chalDone = id => !!(records.chal && records.chal[id]);
   const tierDoneCount = i => CHALLENGE_TIERS[i].filter(c => chalDone(c.id)).length;
@@ -1025,7 +1037,7 @@ body:not(.mode-intro) .intro { display: none; }
     const i = tierIdx(), list = CHALLENGE_TIERS[i], done = tierDoneCount(i), full = done >= PER_TIER;
     const rows = list.map(c => {
       const d = chalDone(c.id), locked = !d && full;
-      return `<div class="chal${d ? ' done' : ''}${locked ? ' locked' : ''}"><i class="chk">${d ? '&#10003;' : ''}</i><span>${c.text}${c.goal ? ` (${c.goal})` : ''}</span><b><i class="coin"></i>${c.reward.toLocaleString()}</b></div>`;
+      return `<div class="chal${d ? ' done' : ''}${locked ? ' locked' : ''}"><i class="chk">${d ? '&#10003;' : ''}</i><span>${c.text}${c.goal ? ` (${c.goal})` : ''}</span><b><i class="coin"></i>${c.reward.toLocaleString()} <i class="gcoin"></i>${TIER_STARS[i]}</b></div>`;
     }).join('');
     const last = i === CHALLENGE_TIERS.length - 1;
     const foot = full ? (last ? 'Every challenge tier is done. Legend!' : `Tier done! ${PER_TIER} new challenges unlock at ${(i + 1) * TIER_EVERY} rocket upgrades (you have ${rocketLv()}).`)
@@ -1046,7 +1058,7 @@ body:not(.mode-intro) .intro { display: none; }
       if (chalDone(c.id) || !chalMet(c, f)) continue;
       records.chal = records.chal || {};
       records.chal[c.id] = records.day;
-      f.chalDone.push(c);
+      f.chalDone.push(c); f.starsEarned = (f.starsEarned || 0) + TIER_STARS[i];
       floats.push({ text: 'CHALLENGE DONE!', x: VW / 2, y: (BASE - yOff) / 2 - 150, life: 1.8, max: 1.8, color: '#3ee6b0' });
       floats.push({ text: c.text, x: VW / 2, y: (BASE - yOff) / 2 - 112, life: 1.8, max: 1.8, color: '#fff3dc' });
       Sound.gold();
@@ -1075,6 +1087,7 @@ body:not(.mode-intro) .intro { display: none; }
   ['nextDayBtn'].forEach(id => document.getElementById(id).addEventListener('click', () => {
     closeTut(true);
     records.day = (records.day || 1) + 1; setMode('launch'); renderUI();
+    setTimeout(() => { if (!flight && screen === 'launch') startFlight(); }, 900);
     parts = []; floats = [];
     window.scrollTo({ top: 0, behavior: 'smooth' });
     floats.push({ text: `DAY ${records.day}!`, x: rx() + 120, y: 260, life: 1.6, max: 1.6, color: '#3ee6b0' });
@@ -2560,7 +2573,7 @@ body:not(.mode-intro) .intro { display: none; }
     if (flight) return;
     const st = rollStats(state);
     setFire(false); autoFire = 0; lift = 0; liftV = 0;
-    flight = { phase: 'ascent', cd: 0, marks: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
+    flight = { phase: 'countdown', cd: 0, marks: 0, autoT: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
       maxAlt: 0, maxSpd: 0, reached: false, closest: Infinity, trail: [], hide: false, end: null, burning: false, screen: { x: rx(), y: GROUND },
       emptyT: -1, power: 1, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
       smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: Math.random() < 0.1 ? simPeak(st) * (0.45 + Math.random() * 0.4) : -1, gold: null, gotGold: false,
@@ -2606,6 +2619,7 @@ body:not(.mode-intro) .intro { display: none; }
   }
   function springRelease(f) {
     f.vy = Math.max(f.vy + PAD_V[state.pad] * 0.6, PAD_V[state.pad]); f.y = Math.max(f.y, 0.5);
+    f.springT = 6; // for a few seconds, coasting without thrust bleeds the spring's speed away fast
     trampDip = 0; trampWob = 1; shakeT = 0.3;
     floats.push({ text: 'BOING!', x: VW / 2, y: (BASE - yOff) / 2 + 40, life: 1, max: 1, color: '#ff9a3c' });
   }
@@ -2746,9 +2760,10 @@ body:not(.mode-intro) .intro { display: none; }
       const d = Math.min(v / dt, v * v * f.st.cd * rho);
       ax -= f.vx / v * d; ay -= f.vy / v * d;
     }
-    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && keys.thrust && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
+    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.autoT > 0) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
     if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
+    if (f.springT > 0 && !f.burning && f.vy > 0) f.vy = Math.max(0, f.vy - 70 * dt);
     // sideways position is steered directly (see updateFlight); physics only moves the rocket up and down
     f.vx = 0; f.vy += ay * dt;
     f.y += f.vy * dt * (f.fx.speed > 0 ? 2 : 1);
@@ -2765,7 +2780,7 @@ body:not(.mode-intro) .intro { display: none; }
         f.vx = 0; f.vy = 0;
       }
     }
-    if (!f.infinite && (Math.hypot(f.x, f.y + P.R) > 420000 || f.ft > 300)) { endFlight('lost'); return true; }
+    if (!f.infinite && (Math.hypot(f.x, f.y + P.R) > 420000 || f.ft > 600)) { endFlight('lost'); return true; }
     return false;
   }
 
@@ -2777,15 +2792,15 @@ body:not(.mode-intro) .intro { display: none; }
     if (f.phase === 'done') return;
     if (f.phase === 'countdown') {
       f.cd += dt;
-      const marks = ['3', '2', '1', 'HOLD THRUST!'];
+      const marks = ['3', '2', '1', 'LIFTOFF!'];
       while (f.marks < marks.length && f.cd >= f.marks * 0.7) {
         floats.push({ text: marks[f.marks], x: VW / 2, y: (BASE - yOff) / 2 - 30, life: 0.9, max: 0.9, color: f.marks === 3 ? '#3ee6b0' : '#ffcf33' });
         Sound.count(f.marks === 3);
         f.marks++;
       }
-      f.burning = f.cd > 1.3;
+      f.burning = f.cd > 1.4;
       if (f.burning) f.trail.push({ x: (Math.random() - 0.5) * 20, y: 0, life: 2.5 });
-      if (f.cd >= 2.1) f.phase = 'ascent';
+      if (f.cd >= 2.1) { f.phase = 'ascent'; f.autoT = 1.1; } // engines fire on their own to get you off the pad
       return;
     }
     f.ft += dt;
@@ -2817,6 +2832,8 @@ body:not(.mode-intro) .intro { display: none; }
     const wob = f.left ? Math.sin(f.ft * 6 + f.ph1) * 0.2 * c + Math.sin(f.ft * 13) * 0.05 * c : 0;
     f.ang += (input * 0.18 + wob + f.kick * 0.0015 - f.ang) * Math.min(1, dt * 6);
     for (const k in f.fx) f.fx[k] = Math.max(0, f.fx[k] - dt);
+    if (f.springT > 0) f.springT -= dt;
+    if (f.autoT > 0) { f.autoT -= dt; if (f.autoT <= 0 && !keys.thrust) floats.push({ text: 'HOLD W TO KEEP BURNING!', x: VW / 2, y: (BASE - yOff) / 2 - 30, life: 1.6, max: 1.6, color: '#ffcf33' }); }
     if (f.power < 1) f.power = Math.min(1, f.power + 0.02 * dt); // the crew's patch job slowly kicks in
 
     // far from everything, time runs faster so trips to the Moon don't take forever
@@ -2839,7 +2856,7 @@ body:not(.mode-intro) .intro { display: none; }
 
     alt = altOf(f.x, f.y);
     if (!f.left && alt > 3) {
-      f.left = true; floats.push({ text: 'LIFTOFF!', x: VW / 2, y: (BASE - yOff) / 2 - 30, life: 1, max: 1, color: '#3ee6b0' });
+      f.left = true;
       if (records.day <= 3) floats.push({ text: 'Slide with A / D to grab the stars!', x: VW / 2, y: (BASE - yOff) / 2 + 10, life: 2.6, max: 2.6, color: '#fff3dc' });
     }
     f.maxAlt = Math.max(f.maxAlt, alt);
@@ -2874,7 +2891,7 @@ body:not(.mode-intro) .intro { display: none; }
     const say = (text, color) => floats.push({ text, x: clamp(p.x, 160, VW - 160), y: clamp(p.y - 80, -yOff + 140, BASE - 120), life: 1.6, max: 1.6, color });
     if (kind === 'crash' || kind === 'boom' || kind === 'crushed' || kind === 'wrecked') { f.hide = true; burst(p.x, p.y - 20, ['#ff7a1a', '#ffcf33', '#5d5a78', '#fff3dc', '#ff5a5f'], 60, 9); say('KABOOM!', '#ff7a1a'); shakeT = 0.6; splash(f, p.x, p.y - 30); }
     if (kind === 'land') say('TOUCHDOWN!', '#3ee6b0');
-    if (kind === 'lost') floats.push({ text: 'BYE BYE!', x: VW / 2, y: cy, life: 1.6, max: 1.6, color: '#c77dff' });
+    if (kind === 'lost') floats.push({ text: 'SIGNAL LOST!', x: VW / 2, y: cy, life: 1.6, max: 1.6, color: '#c77dff' });
     if (f.infinite) {
       const best = records.infBest || { alt: 0, time: 0 }, isBest = f.maxAlt > best.alt;
       if (isBest) records.infBest = { alt: f.maxAlt, time: f.ft };
@@ -2886,7 +2903,7 @@ body:not(.mode-intro) .intro { display: none; }
     records.flights++;
     records.best = Math.max(records.best, f.maxAlt);
     if (f.reached) records.space = true;
-    if (kind === 'moon') records.moon = true;
+    if (kind === 'moon') { if (!records.moon) f.starsEarned = (f.starsEarned || 0) + 5; records.moon = true; }
     // Pay day: coins for height plus bonuses. You only see this on the report.
     checkChallenges(f);
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
@@ -2897,7 +2914,8 @@ body:not(.mode-intro) .intro { display: none; }
     earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
     f.earn = earn;
     records.coins = (records.coins || 0) + earn.total;
-    if (f.gotGold) records.gold = (records.gold || 0) + 1;
+    if (f.gotGold) f.starsEarned = (f.starsEarned || 0) + 1;
+    records.gold = (records.gold || 0) + (f.starsEarned || 0);
     saveRecords();
     const isRec = f.maxAlt > prevBest && f.maxAlt > 1;
     if (kind === 'moon') setTimeout(() => { if (flight === f) playOutro(() => { showScreen('launch'); showReport(f, isRec); }); }, 900);
@@ -2926,7 +2944,7 @@ body:not(.mode-intro) .intro { display: none; }
     $('repStats').innerHTML = [['Height reached', fmtAlt(f.maxAlt)], ['Time survived', `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`], ['Hits taken', f.hits], ['Things smashed', f.smashed]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     const b = isBest ? records.infBest : prev;
     $('repEarn').innerHTML = `<h3>Best run</h3><div class="eline"><span>Height</span><b>${fmtAlt(b.alt || 0)}</b></div><div class="eline"><span>Time</span><b>${Math.floor((b.time || 0) / 60)}:${String(Math.round((b.time || 0) % 60)).padStart(2, '0')}</b></div>`;
-    $('repNote').textContent = 'Infinite runs don\'t use up a day and don\'t pay coins. It\'s all about bragging rights.';
+    $('repNote').textContent = 'Infinite runs don\'t use up a day and don\'t pay cash. It\'s all about bragging rights.';
     $('repBack').textContent = 'Back to the launch pad';
     ui.report.hidden = false;
     $('repBack').focus({ preventScroll: true });
@@ -2937,7 +2955,7 @@ body:not(.mode-intro) .intro { display: none; }
     if (flight !== f) return;
     $('repDay').textContent = `DAY ${records.day} REPORT`;
     $('repBack').textContent = 'Go to the shop';
-    const title = f.end === 'moon' ? 'YOU LANDED ON THE MOON!' : f.end === 'crushed' ? 'CRUSHED IN DEEP SPACE!' : f.end === 'lost' ? 'LOST IN SPACE' : f.reached ? 'MADE IT TO SPACE!'
+    const title = f.end === 'moon' ? 'YOU LANDED ON THE MOON!' : f.end === 'crushed' ? 'CRUSHED IN DEEP SPACE!' : f.end === 'lost' ? 'OUT OF CONTROL!' : f.reached ? 'MADE IT TO SPACE!'
       : f.maxAlt < 100 ? 'IT HOPPED!' : f.maxAlt < 1000 ? 'OFF THE GROUND!' : 'TOUCHED THE CLOUDS!';
     $('repTitle').textContent = title;
     $('repRec').hidden = !isRecord;
@@ -2953,7 +2971,7 @@ body:not(.mode-intro) .intro { display: none; }
       boom: 'It ran out of fuel, the engine failed, and it blew up. The crew is already rebuilding it for tomorrow.',
       land: 'Clean landing. The pilot would like a snack.',
       moon: 'Touchdown! Your pilot planted a flag on the Moon. The whole crew is cheering.',
-      lost: 'It drifted off into deep space. Your crew built you an identical one.',
+      lost: 'Your rocket flew off course and the crew lost track of it. They built you a new one for tomorrow.',
       abort: 'You ended the flight early. The rocket is back in the garage.'
     };
     $('repNote').textContent = (luck > 0.75 ? 'Lucky rolls today! ' : luck < 0.25 ? 'Low rolls today. ' : '') + notes[f.end] + (f.reached || f.end === 'moon' ? '' : ` Space starts at ${P.SPACE / 1000} km. Upgrade and fly again.`);
@@ -2961,7 +2979,8 @@ body:not(.mode-intro) .intro { display: none; }
     $('repEarn').innerHTML = `<h3>Today's pay</h3>${lines.map(([k, v]) => `<div class="eline"><span>${k}</span><b>+${v.toLocaleString()}</b></div>`).join('')}`
       + `<div class="etotal"><span>Total</span><b><i class="coin"></i><span id="earnCount">0</span></b></div>`
       + f.chalDone.map(c => `<div class="echal">&#10003; ${c.text}</div>`).join('')
-      + (f.gotGold ? '<div class="egold"><i class="gcoin"></i>You found a GOLD COIN!</div>' : '')
+      + (f.gotGold ? '<div class="egold"><i class="gcoin"></i>You found a RAINBOW STAR!</div>' : '')
+      + (f.starsEarned ? `<div class="egold"><i class="gcoin"></i>+${f.starsEarned} rainbow star${f.starsEarned === 1 ? '' : 's'} today</div>` : '')
       + (f.end === 'moon' && !records.infShown ? (records.infShown = true, saveRecords(), '<div class="egold">INFINITE MODE UNLOCKED! Find it on the launch pad.</div>') : '')
 ;
     ui.report.hidden = false;
@@ -3576,7 +3595,7 @@ body:not(.mode-intro) .intro { display: none; }
       if (active && !f.hide && pts.some(q => Math.hypot(f.gold.x - q.x, f.gold.y - q.y) < 24 + hitR)) {
         f.gotGold = true;
         burst(f.gold.x, f.gold.y, ['#ffe37a', '#ffcf33', '#fff6b0', '#ffffff'], 40, 7);
-        shout('GOLD COIN!', f.gold.x, f.gold.y - 40, '#ffe37a', 1.8);
+        shout('RAINBOW STAR!', f.gold.x, f.gold.y - 40, '#ff9ae8', 1.8);
         Sound.gold(); f.gold = null;
       } else if (f.gold.y > BASE + 60) f.gold = null;
     }
@@ -3596,7 +3615,7 @@ body:not(.mode-intro) .intro { display: none; }
       if (!st.done && active && !f.hide && st.y >= ry) {
         st.done = true;
         if (Math.abs(pts[1].x - st.gx) < st.gap / 2 - hitR * 0.6) {
-          f.docked = true; f.power = Math.min(1.5, f.power + 0.15);
+          f.docked = true; f.power = Math.min(1.5, f.power + 0.15); f.starsEarned = (f.starsEarned || 0) + 1;
           burst(st.gx, st.y, ['#58c4ff', '#3ee6b0', '#fff3dc', '#ffcf33'], 50, 8); Sound.gold(); shakeT = 0.3;
           shout('DOCKED! +15% POWER', st.gx, st.y - 50, '#3ee6b0', 1.8);
         } else {
@@ -3653,9 +3672,9 @@ body:not(.mode-intro) .intro { display: none; }
       const ev = f.event;
       ev.got = ev.count(f) - ev.base;
       if (ev.got >= ev.goal) {
-        f.eventWin = ev.reward; f.event = null; f.fx.inf = 0;
+        f.eventWin = ev.reward; f.event = null; f.fx.inf = 0; f.starsEarned = (f.starsEarned || 0) + 1;
         Sound.gold(); burst(pts[1].x, pts[1].y - 60, ['#ffcf33', '#3ee6b0', '#fff3dc'], 40, 8);
-        shout(`RUSH COMPLETE! +${ev.reward} COINS`, VW / 2, (BASE - yOff) / 2 - 150, '#3ee6b0', 2);
+        shout(`RUSH COMPLETE! +$${ev.reward} +1 STAR`, VW / 2, (BASE - yOff) / 2 - 150, '#3ee6b0', 2);
       } else if (f.fx.inf <= 0) {
         f.event = null; Sound.nope();
         shout('TIME UP!', VW / 2, (BASE - yOff) / 2 - 150, '#ff5a5f', 1.6);
@@ -3749,6 +3768,15 @@ body:not(.mode-intro) .intro { display: none; }
     ctx.font = "15px 'Lilita One', 'Arial Rounded MT Bold', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.lineWidth = 5; ctx.strokeStyle = INK; ctx.strokeText('ORBITAL STATION', gx, y - 52); ctx.fillStyle = '#58c4ff'; ctx.fillText('ORBITAL STATION', gx, y - 52);
   }
+  function drawRainbowStar(x, y, r, p) {
+    const star = () => { ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rad = i % 2 ? r * 0.45 : r; ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); } ctx.closePath(); };
+    ctx.save(); ctx.shadowColor = `hsl(${(p * 120) % 360}, 90%, 65%)`; ctx.shadowBlur = 26; star(); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+    star(); ctx.save(); ctx.clip();
+    const cols = ['#ff5a5f', '#ff9a3c', '#ffcf33', '#3ee6b0', '#58c4ff', '#c77dff'];
+    cols.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(x - r, y - r + i * (2 * r / cols.length), 2 * r, 2 * r / cols.length + 1); });
+    ctx.restore(); star(); strokeInk(3);
+    dot(x - r * 0.18, y - r * 0.2, r * 0.12, 'rgba(255,255,255,.8)');
+  }
   function drawArcade(f, t) {
     if (f.station) drawStation2(f.station, t);
     f.giants.forEach(g => {
@@ -3779,16 +3807,9 @@ body:not(.mode-intro) .intro { display: none; }
     });
     f.pick.forEach(k => { if (k.kind === 'star') drawStar(k.x, k.y + Math.sin(k.p * 4) * 3, Math.sin(k.p * 2) * 0.3); else drawRing(k.x, k.y, k.w, k.p, k.used); });
     if (f.gold) {
-      const g = f.gold, r = 18, spin = Math.cos(g.p * 3);
-      ctx.save(); ctx.translate(g.x, g.y + Math.sin(g.p * 4) * 4);
-      ctx.save(); ctx.shadowColor = '#ffe37a'; ctx.shadowBlur = 26 + Math.sin(g.p * 6) * 8; dot(0, 0, r, '#ffcf33'); ctx.restore();
-      ctx.scale(Math.max(0.15, Math.abs(spin)), 1);
-      const gr = ctx.createRadialGradient(-6, -6, 2, 0, 0, r);
-      gr.addColorStop(0, '#fff6b0'); gr.addColorStop(0.55, '#ffcf33'); gr.addColorStop(1, '#c98a00');
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fillStyle = gr; ctx.fill(); strokeInk(3);
-      ctx.beginPath(); ctx.arc(0, 0, r - 5, 0, 7); ctx.strokeStyle = 'rgba(150,100,0,.6)'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rad = i % 2 ? 4 : 9; ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad); }
-      ctx.closePath(); ctx.fillStyle = '#fff6b0'; ctx.fill(); ctx.strokeStyle = 'rgba(150,100,0,.8)'; ctx.lineWidth = 1.5; ctx.stroke();
+      const g = f.gold, r = 22;
+      ctx.save(); ctx.translate(g.x, g.y + Math.sin(g.p * 4) * 4); ctx.rotate(g.p * 1.5);
+      drawRainbowStar(0, 0, r, g.p);
       ctx.restore();
       for (let i = 0; i < 3; i++) { const a = g.p * 2 + i * 2.1; dot(g.x + Math.cos(a) * 28, g.y + Math.sin(a) * 28, 2, '#fff6b0'); }
     }
@@ -3984,7 +4005,7 @@ body:not(.mode-intro) .intro { display: none; }
   function slotLine(sl) {
     const when = sl.updated ? new Date(sl.updated).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : '';
     const r = sl.records || {};
-    return `<b>${esc(sl.name)}</b><small>Day ${r.day || 1} · <i class="coin"></i>${(r.coins || 0).toLocaleString()} coins${r.gold ? ` · <i class="gcoin"></i>${r.gold} gold` : ''}${when ? ' · ' + when : ''}</small>`;
+    return `<b>${esc(sl.name)}</b><small>Day ${r.day || 1} · <i class="coin"></i>$${(r.coins || 0).toLocaleString()}${r.gold ? ` · <i class="gcoin"></i>${r.gold} star${r.gold === 1 ? '' : 's'}` : ''}${when ? ' · ' + when : ''}</small>`;
   }
   function renderSlots() {
     $m('slotsTitle').textContent = slotMode === 'new' ? 'New Game' : 'Load Game';
@@ -4133,8 +4154,8 @@ body:not(.mode-intro) .intro { display: none; }
       { pic: { rocket: true }, title: 'Welcome to Make It to the Moon!', text: 'You crashed on Earth, and home is up on the Moon. This pile of junk is your ride. Fly higher every day until you make it home.' },
       { html: '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Hold to fire the engine</div></div>', title: 'Hold to fly', text: 'Hold W, the up arrow, or Space to blast off. When your fuel runs out, the engine fails and the rocket blows up. That ends the day.' },
       { html: '<div class="tut-keys"><div class="row"><span class="fake-key">A</span><span class="fake-key">D</span><span class="fake-key">&#8592;</span><span class="fake-key">&#8594;</span></div><div class="row">Slide left and right</div></div>', title: 'Steer', text: 'Use A and D, or the arrow keys, to slide sideways. A junk rocket wobbles a lot. Better fins fix that.' },
-      { pic: { art: 'sky' }, title: 'Grab, boost, dodge', text: 'Fly through green rings for a speed boost and grab stars for coins. Dodge birds, drones, balloons and planes. Every hit costs power.' },
-      { pic: { art: 'pay' }, title: 'Get paid, then upgrade', text: 'At the end of each day you get paid for how high you flew. Spend coins in the shop, and check Challenges for bonus coins.' }
+      { pic: { art: 'sky' }, title: 'Grab, boost, dodge', text: 'Fly through green rings for a speed boost and grab stars for cash. Dodge birds, drones, balloons and planes. Every hit costs power.' },
+      { pic: { art: 'pay' }, title: 'Get paid, then upgrade', text: 'At the end of each day you get paid for how high you flew. Spend your cash in the shop. Challenges pay extra cash and rainbow stars.' }
     ],
     pad: [
       { pic: { asset: 'pad', lv: 1 }, title: 'You got a Launch Spring!', text: 'A giant spring under your rocket that flings it into the sky.' },
@@ -4152,7 +4173,11 @@ body:not(.mode-intro) .intro { display: none; }
     document.getElementById('tutNext').focus({ preventScroll: true });
   }
   function closeTut(skipAll) {
-    if (!tut) return; tut = null; document.getElementById('tutModal').hidden = true;
+    if (!tut) return;
+    const wasIntro = tut.id === 'intro';
+    tut = null; document.getElementById('tutModal').hidden = true;
+    // first day: once the how-to is closed, the countdown begins
+    if (wasIntro && screen === 'launch' && !flight) setTimeout(() => { if (!flight && screen === 'launch') startFlight(); }, 500);
     if (skipAll) tutQueue.length = 0;
     // only keep showing queued tutorials while you're still in the shop
     if (tutQueue.length && screen === 'shop' && !flight) setTimeout(() => { if (!tut && screen === 'shop' && !flight) openTutorial(tutQueue.shift()); }, 250);
@@ -4204,9 +4229,9 @@ body:not(.mode-intro) .intro { display: none; }
       }
       if (s.pic.art === 'pay') {
         ctx.fillStyle = '#2a1f5c'; ctx.fillRect(0, 0, w, h);
-        for (let i = 0; i < 9; i++) { const x = w / 2 - 60 + (i % 5) * 30, y = h * 0.66 - Math.floor(i / 5) * 14 + Math.sin(t * 3 + i) * 2; ctx.beginPath(); ctx.ellipse(x, y, 16, 7, 0, 0, 7); ctx.fillStyle = '#ffcf33'; ctx.fill(); strokeInk(2.5); }
+        for (let i = 0; i < 7; i++) { const x = w / 2 - 70 + (i % 4) * 42, y = h * 0.66 - Math.floor(i / 4) * 18 + Math.sin(t * 3 + i) * 2; ctx.save(); ctx.translate(x, y); ctx.rotate((i % 3 - 1) * 0.15); box(-18, -10, 36, 20, '#5fc55f', 3, 2.5); ctx.font = "14px 'Lilita One', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#eaffea'; ctx.fillText('$', 0, 1); ctx.restore(); }
         ctx.font = "34px 'Lilita One', 'Arial Rounded MT Bold', sans-serif"; ctx.textAlign = 'center';
-        ctx.lineWidth = 7; ctx.strokeStyle = INK; ctx.strokeText('+90 coins', w / 2, h * 0.38); ctx.fillStyle = '#ffcf33'; ctx.fillText('+90 coins', w / 2, h * 0.38);
+        ctx.lineWidth = 7; ctx.strokeStyle = INK; ctx.strokeText('+$90', w / 2, h * 0.38); ctx.fillStyle = '#6fd66f'; ctx.fillText('+$90', w / 2, h * 0.38);
         return;
       }
       // little diagram: rocket coasting along a dotted path to the Moon
@@ -4669,6 +4694,15 @@ body:not(.mode-intro) .intro { display: none; }
     }
     if (tut) drawTut(t);
     if (cosOpen) drawCosPreview(t);
+    if (slotIdx >= 0 && screen !== 'menu' && screen !== 'intro') {
+      records.playSecs = (records.playSecs || 0) + dt;
+      if (records.nextStar == null) records.nextStar = 180 + Math.random() * 120;
+      if (records.playSecs >= records.nextStar) {
+        records.nextStar = records.playSecs + 180 + Math.random() * 120;
+        records.gold = (records.gold || 0) + 1; save(); renderUI();
+        Sound.gold(); toast('+1 RAINBOW STAR for playing! Thanks for flying.');
+      }
+    }
   }
 
   function start(data) {
