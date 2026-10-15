@@ -804,9 +804,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     { id: 'fins', name: 'Fins', blurb: 'Makes your rocket easier to control', color: '#3ee6b0', shout: 'SLICKER FINS!',
       levels: [
         ['Cardboard Flaps', 'Pizza box pieces held on with tape.'],
-        ['Flappy Flaps', 'Tiny metal fins. Still pretty wobbly.'],
-        ['Sturdy Wings', 'Bigger fins that keep you pointed up.'],
-        ['Tri-Fin', 'A third fin up front for steady climbs.'],
+        ['Flappy Flaps', 'Tiny metal fins. Steering gets a lot easier.'],
+        ['Sturdy Wings', 'Bigger fins: faster dodging and way less wobble.'],
+        ['Tri-Fin', 'A third fin. Bye bye, jammed controls.'],
         ['Shark Fins', 'Swept back and mean-looking.'],
         ['Lightning Fins', 'Huge fins with bolts painted on.']
       ], futureCost: [120, 420, 910, 2930, 7150] },
@@ -969,9 +969,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 
   // Each level rolls inside its own band, and every band sits fully above the band before it.
   const BANDS = {
-    engine: [[80, 95], [140, 165], [220, 255], [320, 365], [440, 500], [580, 650]],   // thrust (kN)
-    boosters: [[0, 0], [45, 60], [95, 120], [160, 190], [230, 270], [310, 360]],      // thrust (kN)
-    fuel: [[42, 52], [75, 90], [115, 135], [160, 185], [210, 240], [260, 295]]          // fuel (gal), hull adds 30 per level
+    engine: [[80, 95], [170, 195], [270, 305], [380, 425], [490, 550], [580, 650]],   // thrust (kN)
+    boosters: [[0, 0], [70, 85], [130, 155], [200, 230], [260, 300], [310, 360]],      // thrust (kN)
+    fuel: [[42, 52], [95, 110], [145, 165], [190, 215], [230, 260], [260, 295]]          // fuel (gal), hull adds 30 per level
   };
   const LO = { e: 0, b: 0, f: 0 }, HI = { e: 1, b: 1, f: 1 };
   const inBand = (b, k) => b[0] + (b[1] - b[0]) * k;
@@ -979,7 +979,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const thrust = inBand(BANDS.engine[s.engine], roll.e) + inBand(BANDS.boosters[s.boosters], roll.b);
     const mass = 100 + s.hull * 14 + s.fuel * 15 + s.boosters * 12 + s.fins * 2 + s.engine * 9 + s.nose * 2;
     const fuel = inBand(BANDS.fuel[s.fuel], roll.f) + s.hull * 30;
-    const aero = 4 + s.nose * 22 + s.fins * 14 + s.hull * 6;
+    const aero = 4 + s.nose * 22 + s.fins * 20 + s.hull * 6;
     const assist = 1 + s.station * 0.06 + dishActive(s) * 0.05;
     return { thrust, mass, fuel, aero, assist, padV: PAD_V[s.pad || 0], accel: P.K * thrust / mass * assist, cd: 0.0006 / (1 + aero / 25) };
   }
@@ -1053,7 +1053,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   makeCard(PAD, document.getElementById('stationCards'));
 
   // Simple fill meters instead of numbers. The faded part of a bar is how high a lucky roll can go.
-  const handlingOf = s => clamp((s.fins * 0.45 + s.nose * 0.15 + s.hull * 0.15 + s.engine * 0.25) / 5, 0, 1);
+  const handlingOf = s => clamp((s.fins * 0.7 + s.nose * 0.1 + s.hull * 0.1 + s.engine * 0.1) / 5, 0, 1); // fins do most of the taming
   function meterData(s) {
     const lo = baseStats(s, LO), hi = baseStats(s, HI), h = 0.08 + handlingOf(s) * 0.92;
     return [
@@ -3146,7 +3146,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (f.jamT > 0) input = -input;
     f.kick *= Math.exp(-2 * dt);
     const drift = f.left ? (Math.sin(f.ft * 1.3 + f.ph1) + Math.sin(f.ft * 2.9 + f.ph2) * 0.6) * 38 * c : 0;
-    const steer = 105 + (1 - c) * 55 + state.fins * 8;
+    const steer = 105 + (1 - c) * 55 + state.fins * 24;
     f.lane = clamp(f.lane + (input * steer + drift + f.kick) * dt, -VW * 0.42, VW * 0.42);
     const wob = f.left ? Math.sin(f.ft * 6 + f.ph1) * 0.2 * c + Math.sin(f.ft * 13) * 0.05 * c : 0;
     f.ang += (input * 0.18 + wob + f.kick * 0.0015 - f.ang) * Math.min(1, dt * 6);
@@ -3226,11 +3226,13 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     // Pay day: coins for height plus bonuses. You only see this on the report.
     checkChallenges(f); if (!f.infinite) checkStarChallenges(f);
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
-    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 8 : 250 + (alt - 2000) / 20);
+    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 4 : 500 + (alt - 2000) / 20);
     const earn = { height: heightPay, space: f.reached ? 250 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 3,
       stars: f.stars * 5, close: f.closeCalls * 2, chal: f.chalDone.reduce((a, c) => a + c.reward, 0),
       clean: f.hits === 0 && alt > 200 ? Math.round(heightPay * 0.25) : 0, dock: f.docked ? 300 : 0, rush: f.eventWin || 0 };
     earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
+    // rookie bonus: double pay on day 1, shrinking to nothing by day 13, so the first upgrades come quickly
+    earn.rookie = Math.round(earn.total * Math.max(0, 1 - ((records.day || 1) - 1) / 12)); earn.total += earn.rookie;
     f.earn = earn;
     records.coins = (records.coins || 0) + earn.total;
     records.gold = (records.gold || 0) + (f.starsEarned || 0); ensureStarCh();
@@ -3293,7 +3295,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       abort: 'You ended the flight early. The rocket is back in the garage.'
     };
     $('repNote').textContent = (luck > 0.75 ? 'Lucky rolls today! ' : luck < 0.25 ? 'Low rolls today. ' : '') + notes[f.end] + (f.reached || f.end === 'moon' ? '' : ` Space starts at ${P.SPACE / 1000} km. Upgrade and fly again.`);
-    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal]].filter(([, v]) => v > 0);
+    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal], ['Rookie bonus', e.rookie]].filter(([, v]) => v > 0);
     $('repEarn').innerHTML = `<h3>Today's pay</h3>${lines.map(([k, v]) => `<div class="eline"><span>${k}</span><b>+${v.toLocaleString()}</b></div>`).join('')}`
       + `<div class="etotal"><span>Total</span><b><i class="coin"></i><span id="earnCount">0</span></b></div>`
       + f.chalDone.map(c => `<div class="echal">&#10003; ${c.text}</div>`).join('')
