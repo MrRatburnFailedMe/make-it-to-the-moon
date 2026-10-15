@@ -773,7 +773,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Twin Blaster', 'Two nozzles, twice the noise.'],
         ['Blue Fury', 'Three nozzles burning blue-hot.'],
         ['Plasma Hog', 'Pink plasma. The neighbors have complained.']
-      ], futureCost: [180, 600, 1430, 4550, 11700] },
+      ], futureCost: [180, 700, 1900, 5200, 12500] },
     { id: 'boosters', name: 'Thrusters', blurb: 'Extra push for a stronger launch', color: '#ff9a3c', shout: 'BIGGER THRUSTERS!',
       levels: [
         ['No Boosters', 'Nothing strapped on yet. Just vibes.'],
@@ -782,7 +782,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Strap-Ons', 'Real side boosters with real nozzles.'],
         ['Mega Pods', 'Bigger pods, bigger kick.'],
         ['Twin Titans', 'Huge hazard-striped boosters. Wildly unsafe.']
-      ], futureCost: [220, 750, 1690, 5070, 13000] },
+      ], futureCost: [220, 850, 2100, 5800, 14000] },
     { id: 'hull', name: 'Hull', blurb: 'Less air resistance and more fuel room', color: '#58c4ff', shout: 'BIGGER HULL!',
       levels: [
         ['Chair & Planks', 'A kitchen chair with planks roped around it. The pilot is just sitting there.'],
@@ -791,7 +791,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Riveted Steel', 'Bolted panels. Taller and tougher.'],
         ['Racing Shell', 'Checkered stripes. Faster just by looking at it.'],
         ['Golden Fortress', 'Gold trim on a giant hull. Pure drip.']
-      ], futureCost: [250, 900, 1950, 6180, 16250] },
+      ], futureCost: [250, 1000, 2400, 6800, 17000] },
     { id: 'nose', name: 'Nose Cone', blurb: 'Slices through the air so you go higher', color: '#c77dff', shout: 'SHARPER POINT!',
       levels: [
         ['Traffic Cone', 'Borrowed from the road. Please return it.'],
@@ -800,7 +800,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Pointy Boi', 'A proper point that slices the wind.'],
         ['Chrome Spike', 'Polished chrome and very sharp.'],
         ['Needle of Doom', 'So sharp it pokes holes in clouds.']
-      ], futureCost: [150, 500, 1170, 3580, 8450] },
+      ], futureCost: [150, 600, 1500, 4200, 9500] },
     { id: 'fins', name: 'Fins', blurb: 'Makes your rocket easier to control', color: '#3ee6b0', shout: 'SLICKER FINS!',
       levels: [
         ['Cardboard Flaps', 'Pizza box pieces held on with tape.'],
@@ -809,7 +809,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Tri-Fin', 'A third fin. Bye bye, jammed controls.'],
         ['Shark Fins', 'Swept back and mean-looking.'],
         ['Lightning Fins', 'Huge fins with bolts painted on.']
-      ], futureCost: [120, 420, 910, 2930, 7150] },
+      ], futureCost: [120, 500, 1300, 3600, 8000] },
     { id: 'fuel', name: 'Fuel Tank', blurb: 'Burn longer and fly higher', color: '#ffcf33', shout: 'MORE FUEL!',
       levels: [
         ['Gas Can', 'A lawnmower gas can roped under the seat.'],
@@ -818,7 +818,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         ['Keg Stack', 'Way more fuel, way more slosh.'],
         ['Mega Drum', 'Has a glowing window so you can watch it burn.'],
         ['Bottomless Barrel', 'It is not bottomless. It is close, though.']
-      ], futureCost: [180, 600, 1430, 4550, 11700] }
+      ], futureCost: [180, 700, 1900, 5200, 12500] }
   ];
   const STATION = { id: 'station', name: 'Station', blurb: 'Gives every launch a boost', color: '#58c4ff', station: true, lockedZero: true,
     shouts: ['', 'STATION UNLOCKED!', 'TEDDY ON DUTY!', 'A REAL SHED!', 'CREW HIRED!', 'SPACE CENTER!'],
@@ -829,7 +829,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       ['Backyard Shed', 'A real shed with a dish on the roof. Someone even showed up to help.'],
       ['Mission Trailer', 'Radar, a launch tower, a crew, and your first satellite.'],
       ['Space Center', 'A full control center, searchlights, and satellites overhead.']
-    ], futureCost: [400, 1500, 3250, 9100, 21450] };
+    ], futureCost: [5000, 8000, 12000, 17000, 24000] };
   const DISH = { id: 'dish', name: 'Big Dish', blurb: 'Shows your flight path in space', color: '#c9d2e6', station: true, lockedZero: true, max: 3,
     requires: { id: 'station', lv: 4, label: 'Mission Trailer' },
     shouts: ['', 'DISH UNDER CONSTRUCTION!', 'BIG DISH ONLINE!', 'DEEP SPACE LINK!'],
@@ -838,7 +838,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       ['Dish Frame', 'A huge steel frame, half paneled. Shows 8 seconds of your flight path in space.'],
       ['Big Dish', 'A full-size listening dish. Shows 30 seconds of your flight path.'],
       ['Deep Space Dish', 'Gold receiver, pulsing signal. Shows 90 seconds ahead, enough to aim for the Moon.']
-    ], futureCost: [8000, 18000, 38000] };
+    ], futureCost: [20000, 30000, 45000] };
   const PAD = { id: 'pad', name: 'Launch Spring', color: '#ff9a3c', station: true, lockedZero: true, max: 4,
     blurb: 'Press BOOST UP to spring into the sky',
     shouts: ['', 'SPRING UNLOCKED!', 'STEEL COIL!', 'TWIN PISTONS!', 'HYPER COIL!'],
@@ -848,7 +848,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       ['Steel Coil', 'A big shiny coil. Launches you much higher.'],
       ['Twin Pistons', 'Heavy-duty springs with hydraulic pistons.'],
       ['Hyper Coil', 'A glowing energy coil. Starts you way up in the sky.']
-    ], futureCost: [800, 3500, 7150, 18200] };
+    ], futureCost: [6000, 10000, 15000, 22000] };
   const PAD_V = [0, 200, 340, 500, 700]; // upward speed (m/s) the spring gives you
   const ALL = [...UPGRADES, STATION, DISH, PAD];
   ALL.forEach(u => { u.max = u.max || MAX; u.cost = u.futureCost.slice(0, u.max); }); // prices in coins
@@ -3226,13 +3226,13 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     // Pay day: coins for height plus bonuses. You only see this on the report.
     checkChallenges(f); if (!f.infinite) checkStarChallenges(f);
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
-    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 4 : 500 + (alt - 2000) / 20);
+    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 5 : 400 + (alt - 2000) / 24);
     const earn = { height: heightPay, space: f.reached ? 250 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 3,
       stars: f.stars * 5, close: f.closeCalls * 2, chal: f.chalDone.reduce((a, c) => a + c.reward, 0),
       clean: f.hits === 0 && alt > 200 ? Math.round(heightPay * 0.25) : 0, dock: f.docked ? 300 : 0, rush: f.eventWin || 0 };
     earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
-    // rookie bonus: double pay on day 1, shrinking to nothing by day 13, so the first upgrades come quickly
-    earn.rookie = Math.round(earn.total * Math.max(0, 1 - ((records.day || 1) - 1) / 12)); earn.total += earn.rookie;
+    // first-day bonus: triple pay on day 1 so you can buy a couple of upgrades right away. After that, money is tight.
+    earn.rookie = (records.day || 1) === 1 ? earn.total * 2 : 0; earn.total += earn.rookie;
     f.earn = earn;
     records.coins = (records.coins || 0) + earn.total;
     records.gold = (records.gold || 0) + (f.starsEarned || 0); ensureStarCh();
@@ -3295,7 +3295,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       abort: 'You ended the flight early. The rocket is back in the garage.'
     };
     $('repNote').textContent = (luck > 0.75 ? 'Lucky rolls today! ' : luck < 0.25 ? 'Low rolls today. ' : '') + notes[f.end] + (f.reached || f.end === 'moon' ? '' : ` Space starts at ${P.SPACE / 1000} km. Upgrade and fly again.`);
-    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal], ['Rookie bonus', e.rookie]].filter(([, v]) => v > 0);
+    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal], ['First day bonus', e.rookie]].filter(([, v]) => v > 0);
     $('repEarn').innerHTML = `<h3>Today's pay</h3>${lines.map(([k, v]) => `<div class="eline"><span>${k}</span><b>+${v.toLocaleString()}</b></div>`).join('')}`
       + `<div class="etotal"><span>Total</span><b><i class="coin"></i><span id="earnCount">0</span></b></div>`
       + f.chalDone.map(c => `<div class="echal">&#10003; ${c.text}</div>`).join('')
