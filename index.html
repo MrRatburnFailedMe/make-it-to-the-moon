@@ -69,6 +69,8 @@ body { background: var(--space); color: var(--cream); font-family: var(--f-body)
 .fbar { display: block; height: 12px; margin-top: 4px; border: 2px solid var(--ink); border-radius: 99px; background: var(--panel-2); overflow: hidden; }
 .fbar i { display: block; height: 100%; width: 100%; background: var(--sun); }
 .fbar i.low { background: var(--hot); }
+.boostp .fbar i { background: linear-gradient(90deg, #58c4ff, #c77dff); }
+.boostp .fbar i.on { box-shadow: 0 0 10px #58c4ff; }
 .phase { margin-left: auto; align-self: center; font-family: var(--f-display); font-size: 16px; color: var(--ink); background: var(--mint);
   border: 3px solid var(--ink); border-radius: 10px; padding: 2px 10px; }
 .moon-meter { background: rgba(11,8,32,.78); border: 3px solid var(--ink); border-radius: 12px; padding: 6px 12px 8px; }
@@ -548,7 +550,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="peak-badge" id="peakWrap"><small>Projected peak</small><b id="peakBadge">0 m</b><span class="best" id="bestLine"></span></div>
       <div class="garage-btns" id="garageBtns">
         <button class="fire" id="fireBtn" type="button">Test fire <kbd>F</kbd></button>
-        <button class="launch" id="launchBtn" type="button">HOLD TO FLY</button>
+        <button class="launch" id="launchBtn" type="button">LAUNCH</button>
         <button class="launch inf-btn" id="infBtn" type="button" hidden>INFINITE MODE</button>
         <button class="boost" id="boostBtn" type="button" hidden>BOOST UP</button>
       </div>
@@ -560,6 +562,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
           <div class="pill"><small>Power</small><b id="hPow">100%</b></div>
           <div class="pill hull" id="hHullPill" hidden><small>Hull</small><b id="hHull">5</b></div>
           <div class="pill fuel"><small>Fuel</small><span class="fbar"><i id="hFuel"></i></span></div>
+          <div class="pill fuel boostp"><small>Boost</small><span class="fbar"><i id="hBoost"></i></span></div>
           <div class="fuel-warn" id="fuelWarn" hidden>WARNING: FUEL LOW</div>
           <div class="phase" id="hPhase">LIFTOFF</div>
         </div>
@@ -571,7 +574,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       </div>
       <div class="ctls" id="ctls" hidden>
         <button class="ctl" id="ctlL" type="button" aria-label="Move left">&#9664;</button>
-        <button class="ctl thrust" id="ctlT" type="button">THRUST</button>
+        <button class="ctl thrust" id="ctlT" type="button">BOOST</button>
         <button class="ctl" id="ctlR" type="button" aria-label="Move right">&#9654;</button>
         <button class="ctl bounce" id="ctlB" type="button" hidden>BOOST UP</button>
       </div>
@@ -671,8 +674,8 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       </div>
       <div class="set-group">
         <h3>Controls</h3>
-        <div class="set-row"><span>Thrust button</span><div class="seg" id="setThrust"><button type="button" data-v="hold">Hold</button><button type="button" data-v="toggle">Tap on/off</button></div></div>
-        <div class="keys"><kbd>&#8592; / A</kbd><span>Move left</span><kbd>&#8594; / D</kbd><span>Move right</span><kbd>&#8593; / W / Space</kbd><span>Thrust</span><kbd>F</kbd><span>Test fire on the pad</span><kbd>Esc</kbd><span>Close windows</span></div>
+        <div class="set-row"><span>Boost button</span><div class="seg" id="setThrust"><button type="button" data-v="hold">Hold</button><button type="button" data-v="toggle">Tap on/off</button></div></div>
+        <div class="keys"><kbd>&#8592; / A</kbd><span>Move left</span><kbd>&#8594; / D</kbd><span>Move right</span><kbd>&#8593; / W / Space</kbd><span>Boosters</span><kbd>F</kbd><span>Test fire on the pad</span><kbd>Esc</kbd><span>Close windows</span></div>
       </div>
       <div class="set-group">
         <h3>Display</h3>
@@ -1197,8 +1200,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       if (!c || starDoneId(id) || !chalMet(c, f)) continue;
       records.starDone[id] = records.day;
       f.starDone.push(c); f.starsEarned = (f.starsEarned || 0) + c.stars;
-      floats.push({ text: `RAINBOW STAR CHALLENGE! +${c.stars}`, x: VW / 2, y: (BASE - yOff) / 2 - 190, life: 2, max: 2, color: '#ff9ae8' });
-      floats.push({ text: c.text, x: VW / 2, y: (BASE - yOff) / 2 - 152, life: 2, max: 2, color: '#fff3dc' });
+      floats.push({ text: `+${c.stars} RAINBOW STAR${c.stars > 1 ? 'S' : ''}!`, x: VW / 2, y: (BASE - yOff) / 2 - 190, life: 2, max: 2, color: '#ff9ae8' });
       Sound.gold();
     }
   }
@@ -1217,7 +1219,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       records.chal[c.id] = records.day;
       f.chalDone.push(c);
       floats.push({ text: 'CHALLENGE DONE!', x: VW / 2, y: (BASE - yOff) / 2 - 150, life: 1.8, max: 1.8, color: '#3ee6b0' });
-      floats.push({ text: c.text, x: VW / 2, y: (BASE - yOff) / 2 - 112, life: 1.8, max: 1.8, color: '#fff3dc' });
       Sound.gold();
     }
   }
@@ -1248,7 +1249,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     setTimeout(autoLaunch, 900);
     parts = []; floats = [];
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    floats.push({ text: `DAY ${records.day}!`, x: rx() + 120, y: 260, life: 1.6, max: 1.6, color: '#3ee6b0' });
+    
   }));
   // Popups are placed near where you last clicked, so they can't open off-screen
   // when the game is shown at full length inside a scrolling page.
@@ -2754,7 +2755,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     setFire(false); autoFire = 0; lift = 0; liftV = 0;
     flight = { phase: 'countdown', cd: 0, marks: 0, autoT: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
       maxAlt: 0, maxSpd: 0, reached: false, closest: Infinity, trail: [], hide: false, end: null, burning: false, screen: { x: rx(), y: GROUND },
-      emptyT: -1, power: 1, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
+      emptyT: -1, bfuel: boostSecs(state), bmax: boostSecs(state), boosting: false, power: 1, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
       smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: -1, starDone: [], gold: null, gotGold: false,
       chaos: 1 - handlingOf(state),
       kick: 0, kickT: 1, jamT: 0, sputT: 0, ph1: Math.random() * 6, ph2: Math.random() * 6 };
@@ -2797,7 +2798,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.bounceT = 0;
   }
   // A new day starts the 3-2-1 right away. With a launch spring, wait for the player to pick:
-  // BOOST UP (countdown, then the spring fires) or HOLD TO FLY (countdown with no spring).
+  // BOOST UP (countdown, then the spring fires) or LAUNCH (countdown with no spring).
   function autoLaunch() {
     if (flight || screen !== 'launch' || tut) return;
     if (!state.pad) { startFlight(); return; }
@@ -3071,6 +3072,8 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const mx = P.MX - x, my = P.MY - y, md = Math.hypot(mx, my), gm = P.GM * (P.RM / md) ** 2;
     return [-ex / r * g + mx / md * gm, -ey / r * g + my / md * gm, r - P.R];
   }
+  const BOOST_K = 1.5; // boosters push 1.5x as hard as the main engine
+  const boostSecs = s => 1.5 + s.boosters * 0.2; // seconds of booster fuel
   function stepPhysics(f, dt) {
     let [ax, ay, alt] = gravity(f.x, f.y);
     const v = Math.hypot(f.vx, f.vy);
@@ -3079,8 +3082,12 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       const d = Math.min(v / dt, v * v * f.st.cd * rho);
       ax -= f.vx / v * d; ay -= f.vy / v * d;
     }
-    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.autoT > 0) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
+    // the main engine burns on its own from liftoff until the tank is empty: you can't turn it off
+    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
     if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
+    // secondary boosters: hold W / Up for a big extra push, but their tank is tiny
+    f.boosting = f.burning && keys.thrust && f.bfuel > 0;
+    if (f.boosting) { ay += f.st.accel * f.power * BOOST_K; if (!(f.fx.inf > 0)) f.bfuel = Math.max(0, f.bfuel - dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
     if (f.springT > 0 && !f.burning && f.vy > 0) f.vy = Math.max(0, f.vy - 70 * dt);
     // sideways position is steered directly (see updateFlight); physics only moves the rocket up and down
@@ -3139,7 +3146,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       if (f.kickT <= 0) { f.kick = (Math.random() < 0.5 ? -1 : 1) * (30 + Math.random() * 110) * c; f.kickT = 1.2 + Math.random() * 1.8; }
       f.jamCD = Math.max(0, (f.jamCD || 0) - dt);
       if (c > 0.75 && !f.jamT && !f.jamCD && Math.random() < dt * c * 0.025) {
-        f.jamT = 0.6; f.jamCD = 10; floats.push({ text: 'CONTROLS JAMMED!', x: VW / 2, y: (BASE - yOff) / 2 - 90, life: 1, max: 1, color: '#ff9a3c' });
+        f.jamT = 0.6; f.jamCD = 10;
       }
       if (c > 0.3 && f.burning && !f.sputT && Math.random() < dt * c * 0.25) f.sputT = 0.12 + Math.random() * 0.2 * c;
     }
@@ -3152,7 +3159,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.ang += (input * 0.18 + wob + f.kick * 0.0015 - f.ang) * Math.min(1, dt * 6);
     for (const k in f.fx) f.fx[k] = Math.max(0, f.fx[k] - dt);
     if (f.springT > 0) f.springT -= dt;
-    if (f.autoT > 0) { f.autoT -= dt; if (f.autoT <= 0 && !keys.thrust) floats.push({ text: 'HOLD W TO KEEP BURNING!', x: VW / 2, y: (BASE - yOff) / 2 - 30, life: 1.6, max: 1.6, color: '#ffcf33' }); }
+    if (f.infinite) f.bfuel = Math.min(f.bmax, f.bfuel + 0.12 * dt); // infinite runs slowly refill the boosters
     if (f.power < 1) f.power = Math.min(1, f.power + 0.02 * dt); // the crew's patch job slowly kicks in
 
     // far from everything, time runs faster so trips to the Moon don't take forever
@@ -3166,7 +3173,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       const cy = (BASE - yOff) / 2;
       if (f.emptyT < 0) { f.emptyT = 0; floats.push({ text: 'OUT OF FUEL!', x: VW / 2, y: cy - 100, life: 1.5, max: 1.5, color: '#ffcf33' }); Sound.nope(); }
       const before = f.emptyT; f.emptyT += dt;
-      if (before < FAIL_AT && f.emptyT >= FAIL_AT) { floats.push({ text: 'ENGINE FAILURE!', x: VW / 2, y: cy - 100, life: 1.5, max: 1.5, color: '#ff5a5f' }); Sound.alarm(); shakeT = 0.5; }
+      if (before < FAIL_AT && f.emptyT >= FAIL_AT) { Sound.alarm(); shakeT = 0.5; }
       if (f.emptyT >= FAIL_AT && Math.random() < 0.4) f.trail.push({ x: f.x, y: f.y, life: 2, dark: true });
       if (f.emptyT >= BOOM_AT) { endFlight('boom'); return; }
     }
@@ -3176,7 +3183,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     alt = altOf(f.x, f.y);
     if (!f.left && alt > 3) {
       f.left = true;
-      if (records.day <= 3) floats.push({ text: 'Slide with A / D to grab the stars!', x: VW / 2, y: (BASE - yOff) / 2 + 10, life: 2.6, max: 2.6, color: '#fff3dc' });
     }
     f.maxAlt = Math.max(f.maxAlt, alt);
     f.maxSpd = Math.max(f.maxSpd, Math.hypot(f.vx, f.vy));
@@ -3184,10 +3190,10 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (!f.reached && alt >= P.SPACE) {
       f.reached = true; f.phase = 'space'; ui.meter.hidden = false;
       floats.push({ text: 'WELCOME TO SPACE!', x: VW / 2, y: (BASE - yOff) / 2 - 60, life: 2.2, max: 2.2, color: '#3ee6b0' });
-      floats.push({ text: 'Watch out for asteroids!', x: VW / 2, y: (BASE - yOff) / 2 - 10, life: 2.2, max: 2.2, color: '#fff3dc' });
     }
     if (f.reached) f.closest = Math.min(f.closest, moonDistOf(f.x, f.y));
     if (f.burning) f.trail.push({ x: f.x, y: f.y, life: 2.5 });
+    if (f.boosting) f.trail.push({ x: f.x + (Math.random() - 0.5) * 8 / ppmFor(Math.max(0, alt)), y: f.y, life: 1.6 });
     if (f.power < 1 && Math.random() < (1 - f.power) * 0.6) f.trail.push({ x: f.x, y: f.y, life: 2.5, dark: true });
     if (f.trail.length > 240) f.trail.shift();
   }
@@ -3226,13 +3232,13 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     // Pay day: coins for height plus bonuses. You only see this on the report.
     checkChallenges(f); if (!f.infinite) checkStarChallenges(f);
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
-    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 5 : 400 + (alt - 2000) / 24);
-    const earn = { height: heightPay, space: f.reached ? 250 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 3,
-      stars: f.stars * 5, close: f.closeCalls * 2, chal: f.chalDone.reduce((a, c) => a + c.reward, 0),
-      clean: f.hits === 0 && alt > 200 ? Math.round(heightPay * 0.25) : 0, dock: f.docked ? 300 : 0, rush: f.eventWin || 0 };
+    const alt = Math.max(0, f.maxAlt), heightPay = Math.round(alt <= 2000 ? alt / 7 : 285 + (alt - 2000) / 34);
+    const earn = { height: heightPay, space: f.reached ? 175 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 2,
+      stars: f.stars * 4, close: f.closeCalls, chal: f.chalDone.reduce((a, c) => a + c.reward, 0),
+      clean: f.hits === 0 && alt > 200 ? Math.round(heightPay * 0.25) : 0, dock: f.docked ? 200 : 0, rush: f.eventWin || 0 };
     earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
-    // first-day bonus: triple pay on day 1 so you can buy a couple of upgrades right away. After that, money is tight.
-    earn.rookie = (records.day || 1) === 1 ? earn.total * 2 : 0; earn.total += earn.rookie;
+    // first-day bonus: about 3x pay on day 1 so you can buy a couple of upgrades right away. After that, money is tight.
+    earn.rookie = (records.day || 1) === 1 ? Math.round(earn.total * 2.3) : 0; earn.total += earn.rookie;
     f.earn = earn;
     records.coins = (records.coins || 0) + earn.total;
     records.gold = (records.gold || 0) + (f.starsEarned || 0); ensureStarCh();
@@ -3317,21 +3323,11 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (f.infinite) $('hHull').textContent = '\u2665'.repeat(Math.max(0, f.hull)) || '0';
     ui.fuel.style.width = (fr * 100).toFixed(1) + '%';
     ui.fuel.classList.toggle('low', fr < 0.2);
-    // warn early so an exploding rocket is never a surprise
-    const warnOn = !f.infinite && f.left && f.phase !== 'done' && f.phase !== 'landing' && !(f.fx.inf > 0) && fr < 0.2;
-    const fw = $('fuelWarn');
-    fw.hidden = !warnOn;
-    if (warnOn) {
-      const crit = fr <= 0 ? 'OUT' : fr < 0.1 ? 'CRIT' : 'LOW';
-      fw.textContent = crit === 'OUT' ? 'NO FUEL!' : crit === 'CRIT' ? 'WARNING: FUEL CRITICAL' : 'WARNING: FUEL LOW';
-      fw.classList.toggle('crit', crit !== 'LOW');
-      if (f.fuelWarned !== crit) {
-        f.fuelWarned = crit;
-        if (crit !== 'OUT') { Sound.alarm(); floats.push({ text: crit === 'CRIT' ? 'FUEL CRITICAL!' : 'FUEL LOW!', x: VW / 2, y: (BASE - yOff) / 2 - 60, life: 1.4, max: 1.4, color: '#ff5a5f' }); }
-      }
-    }
+    $('hBoost').style.width = (f.bmax ? f.bfuel / f.bmax * 100 : 0).toFixed(1) + '%'; $('hBoost').classList.toggle('on', !!f.boosting);
+    $('fuelWarn').hidden = true;
     ui.phase.textContent = f.infinite && f.phase !== 'done' ? `INFINITE ${Math.floor(f.ft / 60)}:${String(Math.floor(f.ft % 60)).padStart(2, '0')}` : f.phase === 'landing' ? 'MOON LANDING' : f.phase === 'countdown' ? 'COUNTDOWN' : f.phase === 'done' ? (f.end === 'moon' ? 'ON THE MOON' : 'FLIGHT OVER')
-      : f.fuel <= 0 ? (f.emptyT >= FAIL_AT ? 'ENGINE FAILURE' : 'OUT OF FUEL') : f.burning ? 'BURNING' : f.left ? 'COASTING' : 'HOLD THRUST';
+      : f.fuel <= 0 ? (f.emptyT >= FAIL_AT ? 'ENGINE FAILURE' : 'OUT OF FUEL') : f.boosting ? 'BOOSTING' : 'BURNING';
+    ui.phase.hidden = !(f.infinite || f.phase === 'countdown');
     $('ctlB').hidden = !(state.pad && !f.bounced && altOf(f.x, f.y) <= 40 && f.phase !== 'done');
     $('hPow').textContent = Math.round(f.power * 100) + '%';
     $('hPow').classList.toggle('low', f.power < 0.6);
@@ -3500,7 +3496,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const w2s = (wx, wy) => ({ x: sxr + (wx - f.x) * ppm, y: syr - (wy - f.y) * ppm });
     const k = smooth(alt / P.SPACE);
 
-    thr += ((f.burning && f.phase !== 'done' ? 1 : 0) - thr) * Math.min(1, dt * 8);
+    thr += ((f.burning && f.phase !== 'done' ? (f.boosting ? 1.6 : 1) : 0) - thr) * Math.min(1, dt * 8);
     rattle = (thr * 2.5 + shakeT * 6) * motion * shakeOn();
     if (f.phase !== 'done' && f.phase !== 'countdown') {
       const par = clamp(ppm, 0.03, 0.25) * 0.35 * dt;
@@ -3742,7 +3738,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (r.id === 'smash') { f.fx.missiles = secs; for (let i = 0; i < 9; i++) f.ast.push(Math.random() < 0.5 ? makeRock(60 + Math.random() * (VW - 120), top - i * 60) : makeDebris(60 + Math.random() * (VW - 120), top - i * 60)); }
     Sound.power(); shakeT = 0.2;
     shout(`FUEL RUSH: ${r.name}!`, VW / 2, (BASE - yOff) / 2 - 150, '#ffcf33', 2.2);
-    shout(`Infinite fuel for ${secs} s. ${r.text}`, VW / 2, (BASE - yOff) / 2 - 112, '#fff3dc', 2.2);
+    shout(r.text, VW / 2, (BASE - yOff) / 2 - 112, '#fff3dc', 2.2);
   }
 
   const inDeepZone = f => { const a = altOf(f.x, f.y); return a > DEEP_LO && a < DEEP_HI; };
@@ -3810,7 +3806,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.boxes.forEach(b => { if (!b.dead && Math.hypot(b.x - x, b.y - y) < 230) { b.dead = true; burst(b.x, b.y, ['#c48a52', '#7a4b2a', '#ffcf33'], 12, 5); } });
     f.ast = f.ast.filter(a => !a.dead); f.boxes = f.boxes.filter(b => !b.dead);
   }
-  const shout = (text, x, y, color, life = 1.1) => floats.push({ text, x: clamp(x, 140, VW - 140), y, life, max: life, color });
+  // only the important call-outs make it on screen; little reaction words stay quiet
+  const QUIET = /^(CLOSE CALL!|WHEW!|SQUASHED!|RIIIP!|POP!|POOF!|CLONK!|BZZT!|BLOCKED!|BOOST!|METEOR SHOWER!|SPACE STATION AHEAD!|Fly through the ring!|SOMETHING SHINY ABOVE!|NEW: |CLANG!)|% POWER$/;
+  const shout = (text, x, y, color, life = 1.1) => { if (!QUIET.test(text)) floats.push({ text, x: clamp(x, 140, VW - 140), y, life, max: life, color }); };
 
   function applyPowerup(f, b) {
     Sound.power(); f.crates++;
@@ -3938,7 +3936,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         if (Math.abs(pts[1].x - st.gx) < st.gap / 2 - hitR * 0.6) {
           f.docked = true; f.power = Math.min(1.5, f.power + 0.15);
           burst(st.gx, st.y, ['#58c4ff', '#3ee6b0', '#fff3dc', '#ffcf33'], 50, 8); Sound.gold(); shakeT = 0.3;
-          shout('DOCKED! +15% POWER', st.gx, st.y - 50, '#3ee6b0', 1.8);
+          shout('DOCKED!', st.gx, st.y - 50, '#3ee6b0', 1.8);
         } else {
           f.hits++; f.power = Math.max(0.3, f.power - 0.15); f.vy *= 0.8; shakeT = 0.6; Sound.hit();
           if (f.infinite && --f.hull <= 0) { endFlight('wrecked'); return; }
@@ -3953,7 +3951,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (inDeep && !f.deepSeen) {
       f.deepSeen = true; Sound.alarm();
       shout('ENTERING DEEP SPACE', VW / 2, (BASE - yOff) / 2 - 160, '#ff5a5f', 2.4);
-      shout('Giant asteroids! Missiles and shields won\'t help. DODGE!', VW / 2, (BASE - yOff) / 2 - 122, '#fff3dc', 2.4);
+      shout('GIANT ASTEROIDS!', VW / 2, (BASE - yOff) / 2 - 122, '#fff3dc', 2.4);
     }
     if (inDeep && f.phase !== 'done') {
       f.giantT = (f.giantT == null ? 1.6 : f.giantT) - dt;
@@ -4378,7 +4376,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   function enterGame() {
     peakCache.clear(); syncStationLife(); renderUI(); setMode(records.mode);
     window.scrollTo({ top: 0 });
-    floats.push({ text: `DAY ${records.day}`, x: rx() + 120, y: 260, life: 1.4, max: 1.4, color: '#3ee6b0' });
+    
   }
   $m('mNew').addEventListener('click', () => { Sound.click(); openSlots('new'); });
   $m('mLoad').addEventListener('click', () => {
@@ -4468,12 +4466,12 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     ],
     dish: [
       { pic: { asset: 'dish', lv: 1 }, title: 'You built a Big Dish!', text: 'It tracks your rocket while you fly.' },
-      { pic: { art: 'path' }, title: 'See where you are going', text: 'In flight, a green dotted line shows where your rocket will coast if you let go of thrust.' },
+      { pic: { art: 'path' }, title: 'See where you are going', text: 'In flight, a green dotted line shows where your rocket will coast once its fuel runs out.' },
       { pic: { asset: 'dish', lv: 3 }, title: 'Aim for the Moon', text: 'When the line reaches the Moon it turns gold and says ON TARGET. Upgrade the dish to see further ahead.' }
     ],
     intro: [
       { pic: { rocket: true }, title: 'Welcome to Make It to the Moon!', text: 'You crashed on Earth, and home is up on the Moon. This pile of junk is your ride. Fly higher every day until you make it home.' },
-      { html: '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Hold to fire the engine</div></div>', title: 'Hold to fly', text: 'Hold W, the up arrow, or Space to blast off. When your fuel runs out, the engine fails and the rocket blows up. That ends the day.' },
+      { html: '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Hold for a booster burst</div></div>', title: 'Engine on, boosters ready', text: 'After 3-2-1 your engine fires on its own and can\'t be stopped. Hold W, the up arrow, or Space to fire your boosters for extra speed, but their tank (the blue bar) is tiny!' },
       { html: '<div class="tut-keys"><div class="row"><span class="fake-key">A</span><span class="fake-key">D</span><span class="fake-key">&#8592;</span><span class="fake-key">&#8594;</span></div><div class="row">Slide left and right</div></div>', title: 'Steer', text: 'Use A and D, or the arrow keys, to slide sideways. A junk rocket wobbles a lot. Better fins fix that.' },
       { pic: { art: 'sky' }, title: 'Grab, boost, dodge', text: 'Fly through green rings for a speed boost and grab stars for cash. Dodge birds, drones, balloons and planes. Every hit costs power.' },
       { pic: { art: 'pay' }, title: 'Get paid, then upgrade', text: 'At the end of each day you get paid for how high you flew. Spend your cash in the shop. Challenges pay extra cash and rainbow stars.' }
@@ -4481,7 +4479,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     pad: [
       { pic: { asset: 'pad', lv: 1 }, title: 'You got a Launch Spring!', text: 'A giant spring under your rocket that flings it into the sky.' },
       { html: '<button class="boost" type="button" tabindex="-1">BOOST UP</button>', title: 'Press BOOST UP', text: 'On the launch screen, press BOOST UP (or the S key). The spring squashes down and launches you.' },
-      { html: '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Hold to fire your engines</div></div>', title: 'Then hold to fly', text: 'Right after the boost, hold thrust to keep climbing. Bigger springs launch you higher.' }
+      { html: '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Boosters</div></div>', title: 'Spring, then engines', text: 'Your engine kicks in at liftoff. Bigger springs launch you higher.' }
     ]
   };
   let tut = null; const tutQueue = [];

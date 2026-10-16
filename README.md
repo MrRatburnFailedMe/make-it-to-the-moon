@@ -9,7 +9,7 @@ Open `index.html` in any browser, or play the hosted version on GitHub Pages.
 
 ## How to play
 
-- **Hold W, the up arrow, or Space** to fire the engine.
+- After 3-2-1 the engine fires on its own until the fuel runs out. **Hold W, the up arrow, or Space** to fire your boosters for extra speed (their tank is tiny).
 - **A / D or the arrow keys** slide the rocket left and right.
 - **S** fires the Launch Spring once you've built one.
 - Each flight is one day. Get paid for how high you fly, then spend your cash on upgrades in the shop.
