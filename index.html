@@ -3832,7 +3832,8 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const inSpace = active && altOf(f.x, f.y) > P.SPACE * 0.9;
     // how fast things stream past on screen: always lively, faster when you are faster
     const pp = ppmFor(f.infinite ? Math.max(0, altOf(f.x, f.y)) : Math.min(Math.max(0, altOf(f.x, f.y)), moonDistOf(f.x, f.y)));
-    const flow = clamp(70 + Math.max(0, f.vy) * 0.5 * clamp(pp, 0.25, 1), 70, 320) * (f.fx.speed > 0 ? 2 : 1);
+    const flow = clamp(70 + Math.max(0, f.vy) * 0.5 * clamp(pp, 0.25, 1), 70, 320) * (f.fx.speed > 0 ? 2 : 1) * (f.infinite ? 1.5 : 1);
+    if (f.invT > 0) f.invT -= dt;
     const top = -yOff - 50;
     const altNow = altOf(f.x, f.y);
     if (active && f.left && altNow > 15 && altNow < P.SPACE * 0.9 && f.vy > 5) {
@@ -3949,7 +3950,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
           shout('DOCKED!', st.gx, st.y - 50, '#3ee6b0', 1.8);
         } else if (f.fx.shield > 0) { Sound.block(); shakeT = 0.3; burst(pts[1].x, st.y, ['#3ee6b0', '#fff3dc'], 24, 6);
         } else {
-          f.hits++; f.power = Math.max(0.3, f.power - 0.15); f.vy *= 0.8; shakeT = 0.6; Sound.hit();
+          takeHit(f, f.infinite ? 0.07 : 0.15); f.vy *= 0.8; shakeT = 0.6; Sound.hit();
           burst(pts[1].x, st.y, ['#9aa3b8', '#ffcf33', '#fff3dc'], 30, 7);
           shout('CLANG! -15% POWER', pts[1].x, st.y - 50, '#ff5a5f', 1.4);
         }
@@ -3967,7 +3968,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (giantsOn && f.phase !== 'done') {
       f.giantT = (f.giantT == null ? 1.6 : f.giantT) - dt;
       if (f.giantT <= 0) {
-        const depth = f.infinite ? 0.3 + clamp(f.ft / 200, 0, 1.6) * 0.6 : clamp((altG - DEEP_LO) / (DEEP_HI - DEEP_LO), 0, 1);
+        const depth = f.infinite ? 0.3 + infD(f) * 0.6 : clamp((altG - DEEP_LO) / (DEEP_HI - DEEP_LO), 0, 1);
         f.giantT = Math.max(0.45, 2.0 - depth * 1.15 + Math.random() * 0.6);
         const n = depth > 0.6 && Math.random() < depth * 0.4 ? 3 : Math.random() < 0.3 + depth * 0.45 ? 2 : 1;
         for (let i = 0; i < n; i++) {
@@ -3990,7 +3991,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         g.dead = true; f.smashed++; burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#3ee6b0', '#fff3dc'], 40, 9); Sound.block(); shakeT = 0.3; continue;
       }
       if (pts.some(q => Math.hypot(g.x - q.x, g.y - q.y) < g.r * 0.82 + hitR * 0.7)) {
-        if (f.infinite) { g.dead = true; f.hits++; f.power = Math.max(0.3, f.power - 0.3); burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#ff5a5f'], 40, 9); Sound.hit(); shakeT = 0.6; continue; }
+        if (f.infinite) { g.dead = true; takeHit(f, 0.1); burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#ff5a5f'], 40, 9); Sound.hit(); shakeT = 0.6; continue; }
         shout('SQUASHED!', pts[1].x, pts[1].y - 60, '#ff5a5f', 1.6); endFlight('crushed'); return;
       }
       if (!g.passed && g.y - g.r > pts[0].y) {
@@ -4046,8 +4047,8 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         if (f.fx.shield > 0) { breakThing(a, '#3ee6b0', true); f.smashed++; shout('BLOCKED!', a.x, a.y - 30, '#3ee6b0', 0.8); Sound.block(); }
         else {
           const h = HIT[a.kind || 'rock'];
-          breakThing(a, '#ff5a5f', true); f.hits++; Sound.hit();
-          f.power = Math.max(0.3, f.power - h.dmg * 0.6); f.vy *= 1 - (1 - h.slow) * 0.45; shakeT = 0.45;
+          breakThing(a, '#ff5a5f', true);
+          if (takeHit(f, f.infinite ? 0.05 + infD(f) * 0.01 : h.dmg * 0.6)) { Sound.hit(); f.vy *= 1 - (1 - h.slow) * (f.infinite ? 0.15 : 0.45); shakeT = 0.45; }
           shout(`${h.text} -${Math.round(h.dmg * 60)}% POWER`, a.x, a.y - 40, '#ff5a5f', 1.2);
         }
       }
@@ -4066,68 +4067,78 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 
   // ---------- Infinite Mode waves: short themed rounds with a breather in between ----------
   const WAVES = { rocks: 'ASTEROID FIELD', junk: 'JUNK STORM', flyers: 'UFO TRAFFIC', mixed: 'TRAFFIC JAM', shower: 'METEOR SHOWER', giants: 'GIANT ROCKS', boss: 'ALIEN BOSS!' };
+  // easy for the first two waves, then it keeps getting harder
+  const infD = f => f.waveN <= 2 ? 0 : Math.min(2, 0.4 + (f.waveN - 3) * 0.16);
+  function takeHit(f, amt) {
+    if (f.infinite) { if (f.invT > 0) return false; f.invT = 0.35; }
+    f.hits++; f.power = Math.max(0.3, f.power - amt); return true;
+  }
   function updateWaves(f, dt, pts, hitR, top) {
-    const d = clamp(f.ft / 200, 0, 1.6);
+    const d = infD(f), k = 1 / (1 + d * 1.2); // k shrinks the gaps between spawns
     let w = f.wave;
     if (!w || w.t >= w.dur) {
       if (w && w.kind !== 'calm') {
-        f.wave = { kind: 'calm', t: 0, dur: 4 };
-        f.boxes.push({ x: 70 + Math.random() * (VW - 140), y: top, p: Math.random() * 6 });
-        for (let i = 0; i < 6; i++) f.pick.push({ kind: 'star', x: VW * 0.2 + Math.random() * VW * 0.6, y: top - i * 60, p: Math.random() * 6 });
+        f.wave = { kind: 'calm', t: 0, dur: 2.5 };
+        if (Math.random() < 0.6) f.boxes.push({ x: 70 + Math.random() * (VW - 140), y: top, p: Math.random() * 6 });
+        for (let i = 0; i < 5; i++) f.pick.push({ kind: 'star', x: VW * 0.2 + Math.random() * VW * 0.6, y: top - i * 60, p: Math.random() * 6 });
         return;
       }
       f.waveN++;
-      const pool = ['rocks', 'junk', 'flyers', 'mixed', 'shower', 'giants'].filter(k => k !== f.lastWave);
+      const pool = ['rocks', 'junk', 'flyers', 'mixed', 'shower', 'giants'].filter(x => x !== f.lastWave);
       const kind = f.waveN % 4 === 3 ? 'boss' : pool[Math.floor(Math.random() * pool.length)];
       f.lastWave = kind;
-      f.wave = w = { kind, t: 0, dur: kind === 'boss' ? 20 : 13 + Math.random() * 6, sp: 0.6, sp2: 1.2 };
-      shout(kind === 'boss' ? 'ALIEN BOSS!' : `WAVE ${f.waveN}: ${WAVES[kind]}`, VW / 2, (BASE - yOff) / 2 - 150, kind === 'boss' ? '#ff5a5f' : '#c77dff', 1.8);
-      if (kind === 'boss') { f.boss = { x: VW / 2, y: -yOff - 140, t: 0, fireT: 2, beamT: 4.5, hp: 14, hurt: 0 }; Sound.alarm(); }
+      f.wave = w = { kind, t: 0, dur: kind === 'boss' ? 15 : 9 + Math.random() * 3, sp: 0.4, sp2: 1 };
+      shout(kind === 'boss' ? 'ALIEN BOSS!' : `WAVE ${f.waveN}: ${WAVES[kind]}`, VW / 2, (BASE - yOff) / 2 - 150, kind === 'boss' ? '#ff5a5f' : '#c77dff', 1.6);
+      if (kind === 'boss') { f.bossN = (f.bossN || 0) + 1; f.boss = { x: VW / 2, y: -yOff - 140, t: 0, tx: VW / 2, moveT: 0, volleyT: 2, lvl: f.bossN, hp: 14, hurt: 0 }; Sound.alarm(); }
     }
     w.t += dt; w.sp -= dt; w.sp2 -= dt;
     const rx = () => 40 + Math.random() * (VW - 80);
-    if (w.kind === 'rocks' && w.sp <= 0) { f.ast.push(makeRock(rx(), top)); w.sp = (0.55 - 0.18 * Math.min(d, 1)) * (0.6 + Math.random() * 0.8); }
+    if (w.kind === 'rocks' && w.sp <= 0) { f.ast.push(makeRock(rx(), top)); w.sp = 0.28 * k * (0.6 + Math.random() * 0.8); }
     if (w.kind === 'junk' && w.sp <= 0) {
-      const cx = rx(); for (let i = 0; i < 3 + Math.floor(d * 2); i++) f.ast.push(makeDebris(clamp(cx + (Math.random() - 0.5) * 160, 30, VW - 30), top - Math.random() * 90));
-      w.sp = 1.5 - 0.4 * Math.min(d, 1);
+      const cx = rx(); for (let i = 0; i < 3 + Math.floor(d * 2); i++) f.ast.push(makeDebris(clamp(cx + (Math.random() - 0.5) * 170, 30, VW - 30), top - Math.random() * 90));
+      w.sp = 0.8 * k;
     }
-    if (w.kind === 'flyers' && w.sp <= 0) { f.ast.push(makeSpaceFlyer()); w.sp = (0.75 - 0.25 * Math.min(d, 1)) * (0.7 + Math.random() * 0.6); }
+    if (w.kind === 'flyers' && w.sp <= 0) { f.ast.push(makeSpaceFlyer()); w.sp = 0.36 * k * (0.7 + Math.random() * 0.6); }
     if (w.kind === 'mixed') {
-      if (w.sp <= 0) { f.ast.push(Math.random() < 0.5 ? makeRock(rx(), top) : makeDebris(rx(), top)); w.sp = 0.9 - 0.25 * Math.min(d, 1); }
-      if (w.sp2 <= 0) { f.ast.push(makeSpaceFlyer()); w.sp2 = 1.4 - 0.4 * Math.min(d, 1); }
+      if (w.sp <= 0) { f.ast.push(Math.random() < 0.5 ? makeRock(rx(), top) : makeDebris(rx(), top)); w.sp = 0.4 * k; }
+      if (w.sp2 <= 0) { f.ast.push(makeSpaceFlyer()); w.sp2 = 0.7 * k; }
     }
+    if (w.kind === 'boss' && w.sp <= 0) { f.ast.push(makeDebris(rx(), top)); w.sp = 0.9 * k; } // a little trash keeps falling during the fight
     if (w.kind === 'shower' && w.sp <= 0) {
-      w.sp = Math.max(2.2, 4 - d * 1.2);
-      const gapX = 80 + Math.random() * (VW - 160), gap = Math.max(130, hitR * 2 + 90 - d * 20);
+      w.sp = Math.max(1.2, 2.4 - d * 0.7);
+      const gapX = 80 + Math.random() * (VW - 160), gap = Math.max(120, hitR * 2 + 90 - d * 20);
       for (let x = 30; x < VW - 20; x += 46) {
         if (Math.abs(x - gapX) < gap / 2) continue;
         const r = makeRock(x + (Math.random() - 0.5) * 16, top - Math.random() * 60);
-        r.vx = (Math.random() - 0.5) * 20; r.vy = 40 + Math.random() * 30; f.ast.push(r);
+        r.vx = (Math.random() - 0.5) * 20; r.vy = 50 + Math.random() * 30; f.ast.push(r);
       }
     }
   }
 
   // ---------- the alien boss: hovers above you for 20 seconds and shoots lasers ----------
   function updateBoss(f, dt, pts, hitR, active) {
-    const b = f.boss, d = clamp(f.ft / 200, 0, 1.6);
+    const b = f.boss;
     if (b && f.phase !== 'done') {
       b.t += dt; b.hurt = Math.max(0, b.hurt - dt);
-      const leaving = !f.wave || f.wave.kind !== 'boss' || f.wave.t > 19;
-      const beam = f.lasers.find(l => l.beam && l.warn > 0);
-      const tx = beam ? beam.x : clamp(pts[1].x + Math.sin(b.t * 1.3) * 140, 90, VW - 90);
-      b.x += (tx - b.x) * Math.min(1, (beam ? 4 : 1.6) * dt);
-      if (leaving) b.y -= 280 * dt; else b.y += (-yOff + 140 + Math.sin(b.t * 2) * 8 - b.y) // high up, just under the top bar * Math.min(1, 2 * dt);
+      const leaving = !f.wave || f.wave.kind !== 'boss' || f.wave.t > f.wave.dur - 1;
+      b.moveT -= dt; if (b.moveT <= 0) { b.tx = 90 + Math.random() * (VW - 180); b.moveT = 1.4 + Math.random(); } // drifts around; it doesn't follow you
+      b.x += (b.tx - b.x) * Math.min(1, 1.2 * dt);
+      if (leaving) b.y -= 280 * dt; else b.y += (-yOff + 140 + Math.sin(b.t * 2) * 8 - b.y) * Math.min(1, 2 * dt); // high up, just under the top bar
       if (!leaving && b.y > -yOff + 90) {
-        b.fireT -= dt;
-        if (b.fireT <= 0) {
-          const a = Math.atan2(pts[1].y - b.y, pts[1].x - b.x), spd = 200 + Math.min(d, 1) * 70;
-          f.lasers.push({ x: b.x, y: b.y + 26, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, life: 5, big: true });
-          b.fireT = Math.max(0.9, 1.6 - 0.5 * Math.min(d, 1)); Sound.click();
+        b.volleyT -= dt;
+        if (b.volleyT <= 0) {
+          // every boss you meet charges faster and fires more beams at once
+          const L = b.lvl, n = Math.min(4, L), charge = Math.max(0.45, 1.3 - 0.2 * (L - 1)), xs = [];
+          xs.push(clamp(pts[1].x + (Math.random() - 0.5) * 220, 40, VW - 40)); // poorly aimed
+          for (let tries = 0; xs.length < n && tries < 40; tries++) { const x = 40 + Math.random() * (VW - 80); if (xs.every(o => Math.abs(o - x) > 110)) xs.push(x); }
+          xs.forEach(x => f.lasers.push({ beam: true, x, warn: charge, max: charge, on: 0.45 }));
+          b.volleyT = charge + 0.45 + Math.max(0.6, 1.8 - 0.25 * (L - 1));
+          Sound.alarm();
         }
       }
       if (leaving && b.y < -yOff - 220) f.boss = null;
     }
-    // lasers move; a hit costs 20% power. The shield eats them.
+    // beams charge, then fire; a hit costs 7% power. The shield eats them.
     f.lasers.forEach(l => {
       if (l.beam) { if (l.warn > 0) l.warn -= dt; else l.on -= dt; }
       else { l.x += l.vx * dt; l.y += l.vy * dt; l.life -= dt; }
@@ -4138,8 +4149,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       if (!hit) continue;
       if (l.beam) l.hit = true; else l.dead = true;
       if (f.fx.shield > 0) { Sound.block(); burst(l.x, l.beam ? pts[1].y : l.y, ['#ff5aa8', '#3ee6b0', '#fff3dc'], 10, 4); continue; }
-      f.hits++; f.power = Math.max(0.3, f.power - 0.1); shakeT = 0.4; Sound.hit();
-      burst(pts[1].x, pts[1].y, ['#ff5aa8', '#ff5a5f', '#fff3dc'], 18, 6);
+      if (takeHit(f, 0.07)) { shakeT = 0.4; Sound.hit(); burst(pts[1].x, pts[1].y, ['#ff5aa8', '#ff5a5f', '#fff3dc'], 18, 6); }
     }
     f.lasers = f.lasers.filter(l => !l.dead && (l.beam ? l.on > 0 : l.life > 0 && l.y < BASE + 40 && l.y > -yOff - 80 && l.x > -40 && l.x < VW + 40));
   }
@@ -4167,7 +4177,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const b = f.boss; if (!b) return;
     ctx.save(); ctx.translate(b.x, b.y);
     // tractor glow while it charges a beam
-    if (f.lasers.some(l => l.beam && l.warn > 0)) { ctx.save(); ctx.globalAlpha = 0.5 + Math.sin(t * 30) * 0.3; dot(0, 26, 22, '#ff5aa8'); ctx.restore(); }
+    { const c = f.lasers.find(l => l.beam && l.warn > 0); if (c) { const k = 1 - c.warn / (c.max || 1); ctx.save(); ctx.shadowColor = '#ff5aa8'; ctx.shadowBlur = 30 * k; ctx.globalAlpha = 0.55 + Math.sin(t * 30) * 0.25; dot(0, 26, 8 + 22 * k, '#ff5aa8'); ctx.restore(); } }
     // dome and the alien inside
     ctx.beginPath(); ctx.arc(0, -10, 34, Math.PI, 0); ctx.fillStyle = 'rgba(160,230,255,.35)'; ctx.fill(); strokeInk(3);
     dot(0, -14, 17, '#7ee06a'); strokeInk(2.5);
