@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Help a crash-landed alien turn junkyard scraps into a rocket and fly home to the Moon.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrratburnfailedme.github.io/make-it-to-the-moon/">
+<meta property="og:title" content="Make It to the Moon">
+<meta property="og:description" content="Help a crash-landed alien turn junkyard scraps into a rocket and fly home to the Moon. Free to play in your browser.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Make It to the Moon">
+<meta name="twitter:description" content="Help a crash-landed alien turn junkyard scraps into a rocket and fly home to the Moon. Free to play in your browser.">
 <title>Make It to the Moon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -543,8 +550,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     <span class="coins goldc" id="goldBadge" title="Rainbow stars"><i class="gcoin"></i>0</span>
     <div class="progress" aria-label="Upgrade progress">
       <span class="day" id="dayBadge">DAY 1</span>
-      <span id="progText">0 / 35 upgrades</span>
-      <div class="bar"><i id="progBar"></i></div>
+      <span id="progText">0 upgrades unlocked</span>
     </div>
     </div>
   </header>
@@ -555,12 +561,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="chip" id="mkChip">MK 1</div>
       <button class="stats-btn" id="statsBtn" type="button">View stats</button>
       <button class="stats-btn chal-btn" id="chalBtn" type="button">Challenges <span id="chalBadge"></span></button>
-      <button class="stats-btn cos-btn2" id="cosBtn2" type="button" hidden>Mystery Box</button>
-      <button class="stats-btn inv-btn2" id="invBtn2" type="button" hidden>Inventory</button>
       <div class="peak-badge" id="peakWrap"><small>Projected peak</small><b id="peakBadge">0 m</b><span class="best" id="bestLine"></span></div>
       <button class="start-big" id="launchBtn" type="button">START</button>
       <div class="garage-btns" id="garageBtns">
-        <button class="fire" id="fireBtn" type="button">Test fire <kbd>F</kbd></button>
         <button class="launch inf-btn" id="infBtn" type="button" hidden>INFINITE MODE</button>
         <button class="boost" id="boostBtn" type="button" hidden>BOOST UP</button>
       </div>
@@ -623,7 +626,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="cards" id="stationCards"></div>
       <div class="foot">
         <span>Earn cash by flying higher. Rainbow stars only come from Rainbow Star Challenges.</span>
-        <button class="reset" id="resetBtn" type="button">Reset this save</button>
       </div>
     </div>
   </section>
@@ -684,7 +686,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="set-group">
         <h3>Controls</h3>
         <div class="set-row"><span>Thrust button</span><div class="seg" id="setThrust"><button type="button" data-v="hold">Hold</button><button type="button" data-v="toggle">Tap on/off</button></div></div>
-        <div class="keys"><kbd>&#8592; / A</kbd><span>Move left</span><kbd>&#8594; / D</kbd><span>Move right</span><kbd>&#8593; / W / Space</kbd><span>Thrust</span><kbd>F</kbd><span>Test fire on the pad</span><kbd>Esc</kbd><span>Close windows</span></div>
+        <div class="keys"><kbd>&#8592; / A</kbd><span>Move left</span><kbd>&#8594; / D</kbd><span>Move right</span><kbd>&#8593; / W / Space</kbd><span>Thrust</span><kbd>Esc</kbd><span>Close windows</span></div>
       </div>
       <div class="set-group">
         <h3>Display</h3>
@@ -1336,13 +1338,11 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     document.getElementById('goldBadge').hidden = !starsUnlocked();
     document.querySelector('.wallet .wgold').hidden = !starsUnlocked();
     ['cosBtn', 'invBtn'].forEach(id => { document.getElementById(id).hidden = !boxUnlocked(); });
-    if (!flight) ['cosBtn2', 'invBtn2'].forEach(id => { document.getElementById(id).hidden = !boxUnlocked(); });
     document.getElementById('bestLine').textContent = records.flights ? `Best flight: ${fmtAlt(records.best)}` : 'No flights yet';
     document.getElementById('peakBadge').textContent = fmtRange(st.peakLo, st.peakHi);
     document.getElementById('mkChip').textContent = 'MK ' + (rocketLv() + 1);
     const tl = totalLv();
-    document.getElementById('progText').textContent = `${tl} / ${TOTAL} upgrades`;
-    document.getElementById('progBar').style.width = (tl / TOTAL * 100) + '%';
+    document.getElementById('progText').textContent = `${tl} upgrade${tl === 1 ? '' : 's'} unlocked`;
   }
 
   function change(u, dir) {
@@ -1378,23 +1378,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     }
   }
 
-  const resetBtn = document.getElementById('resetBtn');
-  let resetTimer = 0;
-  resetBtn.addEventListener('click', () => {
-    if (!resetBtn.classList.contains('arm')) {
-      resetBtn.classList.add('arm'); resetBtn.textContent = 'Click again to reset';
-      clearTimeout(resetTimer);
-      resetTimer = setTimeout(() => { resetBtn.classList.remove('arm'); resetBtn.textContent = 'Reset this save'; }, 3000);
-      return;
-    }
-    clearTimeout(resetTimer);
-    resetBtn.classList.remove('arm'); resetBtn.textContent = 'Reset this save';
-    state = fresh(); save();
-    records = freshRecords(); saveRecords();
-    setMode('launch'); renderUI(); syncStationLife();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    floats.push({ text: 'BACK TO THE CHAIR', x: rx(), y: 300, life: 1.6, max: 1.6, color: '#fff3dc' });
-  });
 
   // ---------- Canvas ----------
   const cv = document.getElementById('stage');
@@ -1437,17 +1420,15 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mouse = { x: (e.clientX - r.left) / S, y: (e.clientY - r.top) / S - yOff }; });
   cv.addEventListener('pointerleave', () => { mouse = null; });
 
-  // Test fire
+  // the garage engine glow (the old test-fire button is gone; autoFire still lights it after upgrades)
   let firing = false, autoFire = 0;
-  const fireBtn = document.getElementById('fireBtn');
-  const setFire = on => { firing = on; fireBtn.classList.toggle('on', on); };
+  const setFire = on => { firing = on; };
   function holdButton(btn, on, off) {
     btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.setPointerCapture?.(e.pointerId); btn.classList.add('on'); on(); });
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => btn.addEventListener(ev, () => { btn.classList.remove('on'); off(); }));
     btn.addEventListener('keydown', e => { if ((e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); on(); } });
     btn.addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') off(); });
   }
-  holdButton(fireBtn, () => setFire(true), () => setFire(false));
 
   // Flight controls: keyboard + on-screen buttons
   const keys = { left: false, right: false, thrust: false };
@@ -1468,11 +1449,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (screen === 'launch' && !flight && !modelOpen && !e.repeat && !document.querySelector('.modal:not([hidden])')) {
       if (KEYMAP[e.key] === 'thrust' || e.key === 'Enter') { e.preventDefault(); pressStart(); if (KEYMAP[e.key] === 'thrust') keys.thrust = true; return; }
     }
-    if ((e.key === 'f' || e.key === 'F') && !e.repeat) setFire(true);
   });
   window.addEventListener('keyup', e => {
     const k = KEYMAP[e.key]; if (k && !(k === 'thrust' && settings.thrustMode === 'toggle')) keys[k] = false;
-    if (e.key === 'f' || e.key === 'F') setFire(false);
   });
   window.addEventListener('blur', () => { setFire(false); keys.left = keys.right = keys.thrust = false; });
 
@@ -2793,7 +2772,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     }
     $('hHullPill').hidden = !opts.infinite;
     document.body.classList.add('flying');
-    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = $('cosBtn2').hidden = $('invBtn2').hidden = true;
+    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = true;
     closeModel();
     ui.hud.hidden = ui.ctls.hidden = ui.abort.hidden = false; ui.meter.hidden = true;
     if (window.innerWidth <= 860) cv.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2810,7 +2789,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     flight = null; parts = []; floats = []; starShift = { x: 0, y: 0 }; thr = 0;
     document.body.classList.remove('flying');
     ui.report.hidden = ui.hud.hidden = ui.ctls.hidden = ui.abort.hidden = true;
-    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = false; $('chalBtn').hidden = !chalUnlocked(); $('cosBtn2').hidden = $('invBtn2').hidden = !boxUnlocked();
+    ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = false; $('chalBtn').hidden = !chalUnlocked();
     renderUI();
     $('launchBtn').focus({ preventScroll: true });
   }
@@ -2991,9 +2970,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   }
   function closeCos() { cosOpen = false; cosView = null; $('cosModal').hidden = true; }
   $('cosBtn').addEventListener('click', () => { Sound.click(); openBox(); });
-  $('cosBtn2').addEventListener('click', () => { Sound.click(); openBox(); });
   $('invBtn').addEventListener('click', () => { Sound.click(); openCos(); });
-  $('invBtn2').addEventListener('click', () => { Sound.click(); openCos(); });
   $('cosClose').addEventListener('click', closeCos);
   $('cosModal').addEventListener('click', e => { if (e.target.id === 'cosModal') closeCos(); });
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && cosOpen) closeCos(); });
