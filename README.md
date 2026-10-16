@@ -9,11 +9,11 @@ Open `index.html` in any browser, or play the hosted version on GitHub Pages.
 
 ## How to play
 
-- After 3-2-1 the engine fires on its own until the fuel runs out. **Hold W, the up arrow, or Space** to fire your boosters for extra speed (their tank is tiny).
+- Press **START**. After 3-2-1 the engine fires on its own until the fuel runs out. After 2 Thruster upgrades you unlock **BOOST**: hold W, the up arrow, or Space for a burst of speed (the tank is tiny).
 - **A / D or the arrow keys** slide the rocket left and right.
-- **S** fires the Launch Spring once you've built one.
+- Once you build a Launch Spring, it fires by itself every launch.
 - Each flight is one day. Get paid for how high you fly, then spend your cash on upgrades in the shop.
-- Rainbow Star Challenges pay 1-3 rainbow stars each. Spend 5 on the Mystery Box to roll a random cosmetic (golden ones are super rare), then dress up your rocket in the Inventory.
+- Challenges show up on day 3. Find the hidden rainbow star in the sky to unlock Rainbow Star Challenges, which pay 1-3 stars each. Spend 5 on the Mystery Box to roll a random cosmetic (golden ones are super rare), then dress up your rocket in the Inventory.
 - Settings has Infinite money and Infinite rainbow stars switches if you just want to play around.
 - Dodge birds, planes, balloons, drones, asteroids and space junk. In Deep Space, giant asteroids destroy you on contact.
 - Land on the Moon to unlock Infinite Mode.
