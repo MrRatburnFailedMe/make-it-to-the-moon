@@ -3072,7 +3072,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 
   function gravity(x, y) {
     const ex = x, ey = y + P.R, r = Math.hypot(ex, ey), g = P.G0 * (P.R / r) ** 2;
-    const mx = P.MX - x, my = P.MY - y, md = Math.hypot(mx, my), gm = P.GM * (P.RM / md) ** 2;
+    const mx = P.MX - x, my = P.MY - y, md = Math.hypot(mx, my), gm = flight && flight.infinite ? 0 : P.GM * (P.RM / md) ** 2;
     return [-ex / r * g + mx / md * gm, -ey / r * g + my / md * gm, r - P.R];
   }
   function stepPhysics(f, dt) {
@@ -3083,7 +3083,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       const d = Math.min(v / dt, v * v * f.st.cd * rho);
       ax -= f.vx / v * d; ay -= f.vy / v * d;
     }
-    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && keys.thrust && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
+    f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.infinite) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
     if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
     if (f.springT > 0 && !f.burning && f.vy > 0) f.vy = Math.max(0, f.vy - 70 * dt);
@@ -3159,10 +3159,10 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.ang += (input * 0.18 + wob + f.kick * 0.0015 - f.ang) * Math.min(1, dt * 6);
     for (const k in f.fx) f.fx[k] = Math.max(0, f.fx[k] - dt);
     if (f.springT > 0) f.springT -= dt;
-    if (f.power < 1) f.power = Math.min(1, f.power + (f.infinite ? 0.05 : 0.02) * dt); // the crew's patch job slowly kicks in (faster in Infinite)
+    if (f.power < 1) f.power = Math.min(1, f.power + (f.infinite ? 0.008 : 0.02) * dt); // the crew's patch job slowly kicks in (barely at all in Infinite)
 
     // far from everything, time runs faster so trips to the Moon don't take forever
-    const warp = f.fuel <= 0 && f.left ? 1 : 1 + 0.6 * smooth((Math.min(alt, moonDistOf(f.x, f.y)) - 2000) / 38000); // no fast-forward during the countdown to boom
+    const warp = f.fuel <= 0 && f.left ? 1 : 1 + 0.6 * smooth(((f.infinite ? alt : Math.min(alt, moonDistOf(f.x, f.y))) - 2000) / 38000); // no fast-forward during the countdown to boom
     const pdt = dt * warp, n = Math.ceil(pdt / 0.02), h = pdt / n;
     for (let i = 0; i < n; i++) { stepPhysics(f, h); if (checkEnd(f)) break; }
     if (f.phase !== 'ascent' && f.phase !== 'space') return;
@@ -3187,7 +3187,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.maxSpd = Math.max(f.maxSpd, Math.hypot(f.vx, f.vy));
     if (!f.infinite && chalUnlocked()) { checkChallenges(f); if (starsUnlocked()) checkStarChallenges(f); }
     if (!f.reached && alt >= P.SPACE) {
-      f.reached = true; f.phase = 'space'; ui.meter.hidden = false;
+      f.reached = true; f.phase = 'space'; ui.meter.hidden = !!f.infinite;
       floats.push({ text: 'WELCOME TO SPACE!', x: VW / 2, y: (BASE - yOff) / 2 - 60, life: 2.2, max: 2.2, color: '#3ee6b0' });
     }
     if (f.reached) f.closest = Math.min(f.closest, moonDistOf(f.x, f.y));
@@ -3489,7 +3489,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   function drawFlightScene(t, dt, G, motion) {
     const f = flight, s = state, st = s.station;
     const alt = Math.max(0, altOf(f.x, f.y)), md = moonDistOf(f.x, f.y);
-    const ppm = ppmFor(Math.min(alt, md));
+    const ppm = ppmFor(f.infinite ? alt : Math.min(alt, md));
     const base = rocketBase();
     const camY = (BASE - yOff) / 2 + 70;
     const syr = Math.max(camY, base - alt * ppm);
@@ -3521,7 +3521,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     }
     if (alt < 9000) drawClouds(w2s, ppm);
     const mc = w2s(P.MX, P.MY);
-    const moonVisible = drawFlightMoon(mc, P.RM * ppm, f);
+    const moonVisible = f.infinite ? true : drawFlightMoon(mc, P.RM * ppm, f);
     f.moonScr = { x: mc.x, y: mc.y, r: P.RM * ppm };
 
     const sc = 0.3 + 0.7 * clamp(ppm / 2, 0, 1);
@@ -3831,7 +3831,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const active = f.phase === 'space' || f.phase === 'ascent';
     const inSpace = active && altOf(f.x, f.y) > P.SPACE * 0.9;
     // how fast things stream past on screen: always lively, faster when you are faster
-    const pp = ppmFor(Math.min(Math.max(0, altOf(f.x, f.y)), moonDistOf(f.x, f.y)));
+    const pp = ppmFor(f.infinite ? Math.max(0, altOf(f.x, f.y)) : Math.min(Math.max(0, altOf(f.x, f.y)), moonDistOf(f.x, f.y)));
     const flow = clamp(70 + Math.max(0, f.vy) * 0.5 * clamp(pp, 0.25, 1), 70, 320) * (f.fx.speed > 0 ? 2 : 1);
     const top = -yOff - 50;
     const altNow = altOf(f.x, f.y);
@@ -4116,15 +4116,14 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       const beam = f.lasers.find(l => l.beam && l.warn > 0);
       const tx = beam ? beam.x : clamp(pts[1].x + Math.sin(b.t * 1.3) * 140, 90, VW - 90);
       b.x += (tx - b.x) * Math.min(1, (beam ? 4 : 1.6) * dt);
-      if (leaving) b.y -= 280 * dt; else b.y += (-yOff + 215 + Math.sin(b.t * 2) * 10 - b.y) // just below the HUD * Math.min(1, 2 * dt);
-      if (!leaving && b.y > -yOff + 150) {
-        b.fireT -= dt; b.beamT -= dt;
+      if (leaving) b.y -= 280 * dt; else b.y += (-yOff + 140 + Math.sin(b.t * 2) * 8 - b.y) // high up, just under the top bar * Math.min(1, 2 * dt);
+      if (!leaving && b.y > -yOff + 90) {
+        b.fireT -= dt;
         if (b.fireT <= 0) {
-          const n = d > 0.8 ? 5 : 3, base = Math.atan2(pts[1].y - b.y, pts[1].x - b.x), spd = 300 + Math.min(d, 1) * 120;
-          for (let i = 0; i < n; i++) { const a = base + (i - (n - 1) / 2) * 0.2; f.lasers.push({ x: b.x, y: b.y + 24, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, life: 3 }); }
-          b.fireT = Math.max(0.8, 1.35 - 0.4 * Math.min(d, 1)); Sound.click();
+          const a = Math.atan2(pts[1].y - b.y, pts[1].x - b.x), spd = 200 + Math.min(d, 1) * 70;
+          f.lasers.push({ x: b.x, y: b.y + 26, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, life: 5, big: true });
+          b.fireT = Math.max(0.9, 1.6 - 0.5 * Math.min(d, 1)); Sound.click();
         }
-        if (b.beamT <= 0) { f.lasers.push({ beam: true, x: pts[1].x, warn: 0.6, on: 0.4 }); b.beamT = 2.6 + Math.random() * 1.6; Sound.alarm(); }
       }
       if (leaving && b.y < -yOff - 220) f.boss = null;
     }
@@ -4135,11 +4134,11 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     });
     if (active && !f.hide) for (const l of f.lasers) {
       if (l.dead) continue;
-      const hit = l.beam ? (l.warn <= 0 && l.on > 0 && !l.hit && pts.some(q => Math.abs(q.x - l.x) < 16 + hitR)) : pts.some(q => Math.hypot(q.x - l.x, q.y - l.y) < 9 + hitR);
+      const hit = l.beam ? (l.warn <= 0 && l.on > 0 && !l.hit && pts.some(q => Math.abs(q.x - l.x) < 16 + hitR)) : pts.some(q => Math.hypot(q.x - l.x, q.y - l.y) < (l.big ? 18 : 9) + hitR);
       if (!hit) continue;
       if (l.beam) l.hit = true; else l.dead = true;
       if (f.fx.shield > 0) { Sound.block(); burst(l.x, l.beam ? pts[1].y : l.y, ['#ff5aa8', '#3ee6b0', '#fff3dc'], 10, 4); continue; }
-      f.hits++; f.power = Math.max(0.3, f.power - 0.2); shakeT = 0.4; Sound.hit();
+      f.hits++; f.power = Math.max(0.3, f.power - 0.1); shakeT = 0.4; Sound.hit();
       burst(pts[1].x, pts[1].y, ['#ff5aa8', '#ff5a5f', '#fff3dc'], 18, 6);
     }
     f.lasers = f.lasers.filter(l => !l.dead && (l.beam ? l.on > 0 : l.life > 0 && l.y < BASE + 40 && l.y > -yOff - 80 && l.x > -40 && l.x < VW + 40));
@@ -4159,9 +4158,10 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         }
       } else {
         const a = Math.atan2(l.vy, l.vx);
-        ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(a); ctx.shadowColor = '#ff5aa8'; ctx.shadowBlur = 14;
-        ctx.beginPath(); ctx.ellipse(0, 0, 15, 5, 0, 0, 7); ctx.fillStyle = '#ff5aa8'; ctx.fill();
-        ctx.beginPath(); ctx.ellipse(2, 0, 9, 2.2, 0, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+        const k = l.big ? 2.3 : 1;
+        ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(a); ctx.shadowColor = '#ff5aa8'; ctx.shadowBlur = 14 * k;
+        ctx.beginPath(); ctx.ellipse(0, 0, 15 * k, 5 * k, 0, 0, 7); ctx.fillStyle = '#ff5aa8'; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(2 * k, 0, 9 * k, 2.2 * k, 0, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
       }
     });
     const b = f.boss; if (!b) return;
