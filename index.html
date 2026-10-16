@@ -642,7 +642,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="box-result" id="boxResult" hidden></div>
     </div>
     <div class="box-bottom">
-      <button class="btn roll" id="rollBtn" type="button">ROLL<small><i class="gcoin"></i>5</small></button>
+      <button class="btn roll" id="rollBtn" type="button">ROLL<small><i class="gcoin"></i>5 + <i class="coin"></i>20,000</small></button>
       <p id="boxMsg"></p>
       <div class="mbox-odds"><span class="rc">Common</span><span class="rr">Rare</span><span class="re">Epic</span><span class="rL">Golden</span></div>
     </div>
@@ -2758,7 +2758,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     setFire(false); autoFire = 0; lift = 0; liftV = 0;
     flight = { phase: 'countdown', cd: 0, marks: 0, autoT: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
       maxAlt: 0, maxSpd: 0, reached: false, closest: Infinity, trail: [], hide: false, end: null, burning: false, screen: { x: rx(), y: GROUND },
-      emptyT: -1, power: 1, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
+      emptyT: -1, power: 1, lasers: [], boss: null, wave: null, waveN: 0, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
       smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: (!starsUnlocked() && (records.day || 1) >= 4 && Math.random() < 0.4) ? simPeak(st) * (0.3 + Math.random() * 0.3) : -1, starDone: [], gold: null, gotGold: false,
       chaos: 1 - handlingOf(state),
       kick: 0, kickT: 1, jamT: 0, sputT: 0, ph1: Math.random() * 6, ph2: Math.random() * 6 };
@@ -2766,11 +2766,11 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     birds = []; for (let i = 0; i < 7; i++) birds.push({ x: (Math.random() - 0.3) * 400, y: 60 + Math.random() * 260, p: Math.random() * 6 });
     keys.left = keys.right = keys.thrust = false; trampDip = 0;
     if (opts.infinite) {
-      flight.infinite = true; flight.hull = INF_HULL; flight.eventDone = true; flight.goldAlt = -1;
+      flight.infinite = true; flight.eventDone = true; flight.goldAlt = -1;
       floats.push({ text: 'INFINITE MODE', x: VW / 2, y: (BASE - yOff) / 2 - 80, life: 2, max: 2, color: '#c77dff' });
-      floats.push({ text: 'Endless fuel. 5 hits and you are done. How high can you go?', x: VW / 2, y: (BASE - yOff) / 2 - 44, life: 2.6, max: 2.6, color: '#fff3dc' });
+      floats.push({ text: 'Keep your power above 50%!', x: VW / 2, y: (BASE - yOff) / 2 - 44, life: 2.4, max: 2.4, color: '#fff3dc' });
     }
-    $('hHullPill').hidden = !opts.infinite;
+    $('hHullPill').hidden = true;
     document.body.classList.add('flying');
     ui.garage.hidden = ui.chip.hidden = ui.peak.hidden = ui.stats.hidden = $('chalBtn').hidden = true;
     closeModel();
@@ -2826,7 +2826,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 
   // ---------- Cosmetic shop ----------
   let cosTab = 'nose', cosOpen = false, boxBusy = false;
-  const BOX_COST = 5;
+  const BOX_COST = 5, BOX_CASH = 20000;
   const RARITY = { c: { name: 'Common', w: 10 }, r: { name: 'Rare', w: 4 }, e: { name: 'Epic', w: 1.5 }, L: { name: 'GOLDEN', w: 0.35 } };
   // what this save owns; anything already equipped from the old free shop counts as owned
   function owned() {
@@ -2861,7 +2861,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
   // ---------- Mystery Box screen ----------
   let boxPrev = 'shop', boxAnim = { phase: 'idle', t: 0, won: null }, boxSparks = [];
   const RCOL = { c: '#c9d2e6', r: '#58c4ff', e: '#c77dff', L: '#ffcf33' };
-  const canRoll = () => (records.gold || 0) >= BOX_COST;
+  const canRoll = () => (records.gold || 0) >= BOX_COST && (records.coins || 0) >= BOX_CASH;
   function openBox() {
     if (flight) return;
     closeCos(); boxPrev = screen === 'box' ? boxPrev : screen; showScreen('box');
@@ -2876,13 +2876,13 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     $('rollBtn').classList.toggle('broke', !canRoll());
     $('boxMsg').textContent = busy ? 'Here it comes...' : !left ? 'You collected every cosmetic. Legend!'
       : canRoll() ? `${left} cosmetic${left === 1 ? '' : 's'} left to find. Golden ones are super rare!`
-      : `You need ${BOX_COST - stars} more rainbow star${BOX_COST - stars === 1 ? '' : 's'}. Finish Rainbow Star Challenges to earn them.`;
+      : [stars < BOX_COST ? `${BOX_COST - stars} more rainbow star${BOX_COST - stars === 1 ? '' : 's'}` : '', (records.coins || 0) < BOX_CASH ? `$${(BOX_CASH - (records.coins || 0)).toLocaleString()} more cash` : ''].filter(Boolean).join(' and ').replace(/^/, 'You need ') + '.';
   }
   $('rollBtn').addEventListener('click', () => {
     if (boxAnim.phase === 'shake' || !boxPool().length) return;
     const b = $('rollBtn');
     if (!canRoll()) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
-    records.gold -= BOX_COST;
+    records.gold -= BOX_COST; records.coins -= BOX_CASH;
     const won = rollBox();
     owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save(); renderUI();
     boxAnim = { phase: 'shake', t: 0, won, ticks: 0 }; $('boxResult').hidden = true; Sound.click(); renderBox();
@@ -3159,7 +3159,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.ang += (input * 0.18 + wob + f.kick * 0.0015 - f.ang) * Math.min(1, dt * 6);
     for (const k in f.fx) f.fx[k] = Math.max(0, f.fx[k] - dt);
     if (f.springT > 0) f.springT -= dt;
-    if (f.power < 1) f.power = Math.min(1, f.power + 0.02 * dt); // the crew's patch job slowly kicks in
+    if (f.power < 1) f.power = Math.min(1, f.power + (f.infinite ? 0.05 : 0.02) * dt); // the crew's patch job slowly kicks in (faster in Infinite)
 
     // far from everything, time runs faster so trips to the Moon don't take forever
     const warp = f.fuel <= 0 && f.left ? 1 : 1 + 0.6 * smooth((Math.min(alt, moonDistOf(f.x, f.y)) - 2000) / 38000); // no fast-forward during the countdown to boom
@@ -3267,7 +3267,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (flight !== f) return;
     const secs = Math.round(f.ft);
     $('repDay').textContent = 'INFINITE MODE';
-    $('repTitle').textContent = f.end === 'crushed' ? 'CRUSHED!' : f.end === 'abort' ? 'RUN ENDED' : 'WRECKED!';
+    $('repTitle').textContent = f.end === 'abort' ? 'RUN ENDED' : 'TOO MUCH DAMAGE!';
     $('repRec').hidden = !isBest; $('repRec').textContent = 'NEW BEST RUN!';
     $('repStats').innerHTML = [['Height reached', fmtAlt(f.maxAlt)], ['Time survived', `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`], ['Hits taken', f.hits], ['Things smashed', f.smashed]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     const b = isBest ? records.infBest : prev;
@@ -3322,6 +3322,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     ui.alt.textContent = fmtAlt(alt);
     ui.spd.textContent = Math.round(Math.hypot(f.vx, f.vy)) + ' m/s';
     const fr = f.infinite ? 1 : f.fuel / f.st.fuel;
+    $('hPow').classList.toggle('low', f.infinite ? f.power < 0.7 : f.power < 0.6);
     if (f.infinite) $('hHull').textContent = '\u2665'.repeat(Math.max(0, f.hull)) || '0';
     ui.fuel.style.width = (fr * 100).toFixed(1) + '%';
     ui.fuel.classList.toggle('low', fr < 0.2);
@@ -3331,7 +3332,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     ui.phase.hidden = !(f.infinite || f.phase === 'countdown');
     $('ctlB').hidden = true;
     $('hPow').textContent = Math.round(f.power * 100) + '%';
-    $('hPow').classList.toggle('low', f.power < 0.6);
     const fxHtml = (f.event ? `<span class="fxc" style="--c:#ffcf33">${f.event.name} ${Math.min(f.event.got, f.event.goal)}/${f.event.goal} · INFINITE FUEL<b>${f.fx.inf.toFixed(1)}s</b></span>` : '')
       + POWERUPS.filter(p => p.time && f.fx[p.id] > 0).map(p => `<span class="fxc" style="--c:${p.color}">${p.name}<b>${f.fx[p.id].toFixed(1)}s</b></span>`).join('');
     if (fxHtml !== ui.fxCache) { $('hFx').innerHTML = fxHtml; ui.fxCache = fxHtml; }
@@ -3506,6 +3506,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 
     drawSkyBg(t, k);
     if (k > 0.3) drawSpaceDecor(t, smooth((k - 0.3) / 0.7), alt);
+    if (f.infinite) drawInfPlanets(alt, t);
     const deepK = smooth((alt - DEEP_LO) / 5000) * (1 - smooth((alt - DEEP_HI) / 5000));
     if (deepK > 0.01) { ctx.fillStyle = `rgba(110,15,45,${0.28 * deepK})`; ctx.fillRect(0, -yOff, VW, BASE + yOff); }
     drawDecoMoon(1 - smooth(alt / 300));
@@ -3521,6 +3522,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     if (alt < 9000) drawClouds(w2s, ppm);
     const mc = w2s(P.MX, P.MY);
     const moonVisible = drawFlightMoon(mc, P.RM * ppm, f);
+    f.moonScr = { x: mc.x, y: mc.y, r: P.RM * ppm };
 
     const sc = 0.3 + 0.7 * clamp(ppm / 2, 0, 1);
     // exhaust trail
@@ -3551,8 +3553,13 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     const len = -G.tip * sc, ux = Math.sin(f.ang), uy = -Math.cos(f.ang);
     const pts = [0.15, 0.5, 0.85].map(k => ({ x: sxr + ux * len * k, y: syr + uy * len * k }));
     const nose = { x: sxr + ux * len, y: syr + uy * len };
+    // steer into the Moon to land on it
+    if (!f.infinite && (f.phase === 'ascent' || f.phase === 'space') && f.moonScr && f.moonScr.r > 30
+      && [nose, pts[1]].some(q => Math.hypot(q.x - f.moonScr.x, q.y - f.moonScr.y) < f.moonScr.r + 30)) startLanding(f);
+    if (f.phase === 'landing') return;
     updateArcade(f, dt, pts, Math.max(8, sc * (G.W / 2 + 2)), nose);
     drawArcade(f, t);
+    drawBoss(f, t);
     if (!f.hide) {
       ctx.save();
       ctx.translate(anchor.x, anchor.y + G.tip * sc / 2); ctx.rotate(f.ang); ctx.scale(sc, sc); ctx.translate(0, -G.tip / 2);
@@ -3874,7 +3881,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       }
     }
     f.pick = f.pick.filter(k => k.y < BASE + 60 && !(k.used && k.kind === 'star'));
-    if (inSpace) {
+    if (inSpace && !f.infinite) {
       f.spawnA -= dt; f.spawnB -= dt;
       // sparse right after reaching space, thick near the Moon
       const near = f.infinite ? clamp(altOf(f.x, f.y) / 200000, 0, 1) : clamp(1 - moonDistOf(f.x, f.y) / MOON_START, 0, 1) ** 2;
@@ -3898,6 +3905,8 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         }
       }
     }
+    if (f.infinite && inSpace && f.phase !== 'done') updateWaves(f, dt, pts, hitR, top);
+    if (f.boss || f.lasers.length) updateBoss(f, dt, pts, hitR, active);
     if (f.phase !== 'done') {
       f.ast.forEach(a => { a.p = (a.p || 0) + dt; if (a.osc) a.x = a.ox + Math.sin(a.p * a.osc) * a.orr; else a.x += a.vx * dt; a.y += (a.vy + flow) * dt; a.rot += a.vr * dt; });
       f.boxes.forEach(b => { b.y += (15 + flow) * dt; b.p += dt; });
@@ -3938,9 +3947,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
           f.docked = true; f.power = Math.min(1.5, f.power + 0.15);
           burst(st.gx, st.y, ['#58c4ff', '#3ee6b0', '#fff3dc', '#ffcf33'], 50, 8); Sound.gold(); shakeT = 0.3;
           shout('DOCKED!', st.gx, st.y - 50, '#3ee6b0', 1.8);
+        } else if (f.fx.shield > 0) { Sound.block(); shakeT = 0.3; burst(pts[1].x, st.y, ['#3ee6b0', '#fff3dc'], 24, 6);
         } else {
           f.hits++; f.power = Math.max(0.3, f.power - 0.15); f.vy *= 0.8; shakeT = 0.6; Sound.hit();
-          if (f.infinite && --f.hull <= 0) { endFlight('wrecked'); return; }
           burst(pts[1].x, st.y, ['#9aa3b8', '#ffcf33', '#fff3dc'], 30, 7);
           shout('CLANG! -15% POWER', pts[1].x, st.y - 50, '#ff5a5f', 1.4);
         }
@@ -3949,15 +3958,16 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     }
     // DEEP SPACE: giant asteroids that can't be shot or shielded. Each flashes a red warning before it falls.
     const altG = altOf(f.x, f.y), inDeep = active && altG > DEEP_LO && (altG < DEEP_HI || f.infinite);
-    if (inDeep && !f.deepSeen) {
+    if (inDeep && !f.deepSeen && !f.infinite) {
       f.deepSeen = true; Sound.alarm();
       shout('ENTERING DEEP SPACE', VW / 2, (BASE - yOff) / 2 - 160, '#ff5a5f', 2.4);
       shout('GIANT ASTEROIDS!', VW / 2, (BASE - yOff) / 2 - 122, '#fff3dc', 2.4);
     }
-    if (inDeep && f.phase !== 'done') {
+    const giantsOn = f.infinite ? !!(f.wave && f.wave.kind === 'giants' && f.wave.t < f.wave.dur - 1.5) : inDeep;
+    if (giantsOn && f.phase !== 'done') {
       f.giantT = (f.giantT == null ? 1.6 : f.giantT) - dt;
       if (f.giantT <= 0) {
-        const depth = f.infinite ? clamp((altG - DEEP_LO) / 220000, 0, 1.8) : clamp((altG - DEEP_LO) / (DEEP_HI - DEEP_LO), 0, 1);
+        const depth = f.infinite ? 0.3 + clamp(f.ft / 200, 0, 1.6) * 0.6 : clamp((altG - DEEP_LO) / (DEEP_HI - DEEP_LO), 0, 1);
         f.giantT = Math.max(0.45, 2.0 - depth * 1.15 + Math.random() * 0.6);
         const n = depth > 0.6 && Math.random() < depth * 0.4 ? 3 : Math.random() < 0.3 + depth * 0.45 ? 2 : 1;
         for (let i = 0; i < n; i++) {
@@ -3976,7 +3986,11 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     });
     if (active && !f.hide) for (const g of f.giants) {
       if (g.warn > 0) continue;
+      if (f.fx.shield > 0 && Math.hypot(g.x - pts[1].x, g.y - pts[1].y) < g.r * 0.82 + shieldR(pts, nose)) {
+        g.dead = true; f.smashed++; burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#3ee6b0', '#fff3dc'], 40, 9); Sound.block(); shakeT = 0.3; continue;
+      }
       if (pts.some(q => Math.hypot(g.x - q.x, g.y - q.y) < g.r * 0.82 + hitR * 0.7)) {
+        if (f.infinite) { g.dead = true; f.hits++; f.power = Math.max(0.3, f.power - 0.3); burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#ff5a5f'], 40, 9); Sound.hit(); shakeT = 0.6; continue; }
         shout('SQUASHED!', pts[1].x, pts[1].y - 60, '#ff5a5f', 1.6); endFlight('crushed'); return;
       }
       if (!g.passed && g.y - g.r > pts[0].y) {
@@ -3984,7 +3998,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         if (Math.abs(g.x - pts[1].x) - g.r < 70) { f.closeCalls += 2; shout('WHEW!', pts[1].x, pts[1].y - 70, '#ffcf33', 0.8); }
       }
     }
-    f.giants = f.giants.filter(g => g.y - g.r < BASE + 120);
+    f.giants = f.giants.filter(g => !g.dead && g.y - g.r < BASE + 120);
 
     // FUEL RUSH: a surprise mini-challenge with infinite fuel for a few seconds
     if (inSpace && !f.eventDone && !f.event && altOf(f.x, f.y) > 12000 && moonDistOf(f.x, f.y) / MOON_START > 0.5 && Math.random() < dt * 0.12) startFuelRush(f, pts);
@@ -4007,15 +4021,25 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     f.missiles.forEach(m => {
       let tgt = null, best = 1e9;
       f.ast.forEach(a => { if (!a.dead && a.y < m.y + 30) { const d = Math.hypot(a.x - m.x, a.y - m.y); if (d < best) { best = d; tgt = a; } } });
+      if (!tgt && f.boss) { tgt = f.boss; best = Math.max(1, Math.hypot(f.boss.x - m.x, f.boss.y - m.y)); }
       if (tgt) { m.vx += ((tgt.x - m.x) / best * 560 - m.vx) * 5 * dt; m.vy += ((tgt.y - m.y) / best * 560 - m.vy) * 5 * dt; }
       else m.vy -= 400 * dt;
       m.x += m.vx * dt; m.y += m.vy * dt; m.life -= dt;
       for (const a of f.ast) if (!a.dead && Math.hypot(a.x - m.x, a.y - m.y) < a.r + 7) {
         a.dead = true; m.life = 0; f.smashed++; breakThing(a, '#ff7a1a'); break;
       }
+      const b = f.boss;
+      if (b && m.life > 0 && Math.abs(m.x - b.x) < 75 && Math.abs(m.y - b.y) < 30) {
+        m.life = 0; b.hurt = 0.12; burst(m.x, m.y, ['#ff7a1a', '#ffcf33'], 8, 4);
+        if (--b.hp <= 0) { burst(b.x, b.y, ['#7ee06a', '#8a7f9e', '#ff5aa8', '#ffcf33'], 70, 10); Sound.boom(); shakeT = 0.5; shout('BOSS DOWN!', b.x, b.y, '#7ee06a', 1.8); f.boss = null; f.lasers = []; if (f.wave && f.wave.kind === 'boss') f.wave.t = f.wave.dur; }
+      }
     });
     f.missiles = f.missiles.filter(m => m.life > 0 && m.y > -yOff - 80);
     if (active && !f.hide) {
+      if (f.fx.shield > 0) {
+        const R = shieldR(pts, nose);
+        for (const a of f.ast) if (!a.dead && Math.hypot(a.x - pts[1].x, a.y - pts[1].y) < a.r * 0.85 + R) { a.dead = true; breakThing(a, '#3ee6b0', true); f.smashed++; Sound.block(); }
+      }
       for (const a of f.ast) {
         if (a.dead || !pts.some(p => Math.hypot(a.x - p.x, a.y - p.y) < a.r * 0.85 + hitR)) continue;
         a.dead = true;
@@ -4023,7 +4047,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         else {
           const h = HIT[a.kind || 'rock'];
           breakThing(a, '#ff5a5f', true); f.hits++; Sound.hit();
-          if (f.infinite && --f.hull <= 0) { endFlight('wrecked'); return; }
           f.power = Math.max(0.3, f.power - h.dmg * 0.6); f.vy *= 1 - (1 - h.slow) * 0.45; shakeT = 0.45;
           shout(`${h.text} -${Math.round(h.dmg * 60)}% POWER`, a.x, a.y - 40, '#ff5a5f', 1.2);
         }
@@ -4034,6 +4057,154 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     }
     f.ast = f.ast.filter(a => !a.dead && a.y < BASE + 80 && a.x > -160 && a.x < VW + 160);
     f.boxes = f.boxes.filter(b => !b.dead && b.y < BASE + 80);
+    if (f.infinite && active && f.power <= 0.5) {
+      floats.push({ text: 'TOO MUCH DAMAGE!', x: VW / 2, y: (BASE - yOff) / 2 - 120, life: 1.8, max: 1.8, color: '#ff5a5f' });
+      endFlight('wrecked');
+    }
+  }
+  const shieldR = (pts, nose) => Math.hypot(nose.x - pts[1].x, nose.y - pts[1].y) * 1.24 + 10; // matches the bubble drawn around the rocket
+
+  // ---------- Infinite Mode waves: short themed rounds with a breather in between ----------
+  const WAVES = { rocks: 'ASTEROID FIELD', junk: 'JUNK STORM', flyers: 'UFO TRAFFIC', mixed: 'TRAFFIC JAM', shower: 'METEOR SHOWER', giants: 'GIANT ROCKS', boss: 'ALIEN BOSS!' };
+  function updateWaves(f, dt, pts, hitR, top) {
+    const d = clamp(f.ft / 200, 0, 1.6);
+    let w = f.wave;
+    if (!w || w.t >= w.dur) {
+      if (w && w.kind !== 'calm') {
+        f.wave = { kind: 'calm', t: 0, dur: 4 };
+        f.boxes.push({ x: 70 + Math.random() * (VW - 140), y: top, p: Math.random() * 6 });
+        for (let i = 0; i < 6; i++) f.pick.push({ kind: 'star', x: VW * 0.2 + Math.random() * VW * 0.6, y: top - i * 60, p: Math.random() * 6 });
+        return;
+      }
+      f.waveN++;
+      const pool = ['rocks', 'junk', 'flyers', 'mixed', 'shower', 'giants'].filter(k => k !== f.lastWave);
+      const kind = f.waveN % 4 === 3 ? 'boss' : pool[Math.floor(Math.random() * pool.length)];
+      f.lastWave = kind;
+      f.wave = w = { kind, t: 0, dur: kind === 'boss' ? 20 : 13 + Math.random() * 6, sp: 0.6, sp2: 1.2 };
+      shout(kind === 'boss' ? 'ALIEN BOSS!' : `WAVE ${f.waveN}: ${WAVES[kind]}`, VW / 2, (BASE - yOff) / 2 - 150, kind === 'boss' ? '#ff5a5f' : '#c77dff', 1.8);
+      if (kind === 'boss') { f.boss = { x: VW / 2, y: -yOff - 140, t: 0, fireT: 2, beamT: 4.5, hp: 14, hurt: 0 }; Sound.alarm(); }
+    }
+    w.t += dt; w.sp -= dt; w.sp2 -= dt;
+    const rx = () => 40 + Math.random() * (VW - 80);
+    if (w.kind === 'rocks' && w.sp <= 0) { f.ast.push(makeRock(rx(), top)); w.sp = (0.55 - 0.18 * Math.min(d, 1)) * (0.6 + Math.random() * 0.8); }
+    if (w.kind === 'junk' && w.sp <= 0) {
+      const cx = rx(); for (let i = 0; i < 3 + Math.floor(d * 2); i++) f.ast.push(makeDebris(clamp(cx + (Math.random() - 0.5) * 160, 30, VW - 30), top - Math.random() * 90));
+      w.sp = 1.5 - 0.4 * Math.min(d, 1);
+    }
+    if (w.kind === 'flyers' && w.sp <= 0) { f.ast.push(makeSpaceFlyer()); w.sp = (0.75 - 0.25 * Math.min(d, 1)) * (0.7 + Math.random() * 0.6); }
+    if (w.kind === 'mixed') {
+      if (w.sp <= 0) { f.ast.push(Math.random() < 0.5 ? makeRock(rx(), top) : makeDebris(rx(), top)); w.sp = 0.9 - 0.25 * Math.min(d, 1); }
+      if (w.sp2 <= 0) { f.ast.push(makeSpaceFlyer()); w.sp2 = 1.4 - 0.4 * Math.min(d, 1); }
+    }
+    if (w.kind === 'shower' && w.sp <= 0) {
+      w.sp = Math.max(2.2, 4 - d * 1.2);
+      const gapX = 80 + Math.random() * (VW - 160), gap = Math.max(130, hitR * 2 + 90 - d * 20);
+      for (let x = 30; x < VW - 20; x += 46) {
+        if (Math.abs(x - gapX) < gap / 2) continue;
+        const r = makeRock(x + (Math.random() - 0.5) * 16, top - Math.random() * 60);
+        r.vx = (Math.random() - 0.5) * 20; r.vy = 40 + Math.random() * 30; f.ast.push(r);
+      }
+    }
+  }
+
+  // ---------- the alien boss: hovers above you for 20 seconds and shoots lasers ----------
+  function updateBoss(f, dt, pts, hitR, active) {
+    const b = f.boss, d = clamp(f.ft / 200, 0, 1.6);
+    if (b && f.phase !== 'done') {
+      b.t += dt; b.hurt = Math.max(0, b.hurt - dt);
+      const leaving = !f.wave || f.wave.kind !== 'boss' || f.wave.t > 19;
+      const beam = f.lasers.find(l => l.beam && l.warn > 0);
+      const tx = beam ? beam.x : clamp(pts[1].x + Math.sin(b.t * 1.3) * 140, 90, VW - 90);
+      b.x += (tx - b.x) * Math.min(1, (beam ? 4 : 1.6) * dt);
+      if (leaving) b.y -= 280 * dt; else b.y += (-yOff + 215 + Math.sin(b.t * 2) * 10 - b.y) // just below the HUD * Math.min(1, 2 * dt);
+      if (!leaving && b.y > -yOff + 150) {
+        b.fireT -= dt; b.beamT -= dt;
+        if (b.fireT <= 0) {
+          const n = d > 0.8 ? 5 : 3, base = Math.atan2(pts[1].y - b.y, pts[1].x - b.x), spd = 300 + Math.min(d, 1) * 120;
+          for (let i = 0; i < n; i++) { const a = base + (i - (n - 1) / 2) * 0.2; f.lasers.push({ x: b.x, y: b.y + 24, vx: Math.cos(a) * spd, vy: Math.sin(a) * spd, life: 3 }); }
+          b.fireT = Math.max(0.8, 1.35 - 0.4 * Math.min(d, 1)); Sound.click();
+        }
+        if (b.beamT <= 0) { f.lasers.push({ beam: true, x: pts[1].x, warn: 0.6, on: 0.4 }); b.beamT = 2.6 + Math.random() * 1.6; Sound.alarm(); }
+      }
+      if (leaving && b.y < -yOff - 220) f.boss = null;
+    }
+    // lasers move; a hit costs 20% power. The shield eats them.
+    f.lasers.forEach(l => {
+      if (l.beam) { if (l.warn > 0) l.warn -= dt; else l.on -= dt; }
+      else { l.x += l.vx * dt; l.y += l.vy * dt; l.life -= dt; }
+    });
+    if (active && !f.hide) for (const l of f.lasers) {
+      if (l.dead) continue;
+      const hit = l.beam ? (l.warn <= 0 && l.on > 0 && !l.hit && pts.some(q => Math.abs(q.x - l.x) < 16 + hitR)) : pts.some(q => Math.hypot(q.x - l.x, q.y - l.y) < 9 + hitR);
+      if (!hit) continue;
+      if (l.beam) l.hit = true; else l.dead = true;
+      if (f.fx.shield > 0) { Sound.block(); burst(l.x, l.beam ? pts[1].y : l.y, ['#ff5aa8', '#3ee6b0', '#fff3dc'], 10, 4); continue; }
+      f.hits++; f.power = Math.max(0.3, f.power - 0.2); shakeT = 0.4; Sound.hit();
+      burst(pts[1].x, pts[1].y, ['#ff5aa8', '#ff5a5f', '#fff3dc'], 18, 6);
+    }
+    f.lasers = f.lasers.filter(l => !l.dead && (l.beam ? l.on > 0 : l.life > 0 && l.y < BASE + 40 && l.y > -yOff - 80 && l.x > -40 && l.x < VW + 40));
+  }
+  function drawBoss(f, t) {
+    // lasers first so the ship sits on top
+    f.lasers.forEach(l => {
+      if (l.beam) {
+        if (l.warn > 0) {
+          ctx.save(); ctx.globalAlpha = Math.sin(t * 40) > 0 ? 0.9 : 0.35; ctx.setLineDash([10, 8]); ctx.strokeStyle = '#ff5aa8'; ctx.lineWidth = 3;
+          ctx.beginPath(); ctx.moveTo(l.x, f.boss ? f.boss.y : -yOff); ctx.lineTo(l.x, BASE); ctx.stroke(); ctx.restore();
+        } else {
+          const y0 = f.boss ? f.boss.y + 20 : -yOff, k = clamp(l.on / 0.4, 0, 1);
+          ctx.save(); ctx.shadowColor = '#ff5aa8'; ctx.shadowBlur = 30;
+          ctx.fillStyle = `rgba(255,90,168,${0.85 * k})`; ctx.fillRect(l.x - 16, y0, 32, BASE - y0);
+          ctx.fillStyle = `rgba(255,255,255,${0.9 * k})`; ctx.fillRect(l.x - 5, y0, 10, BASE - y0); ctx.restore();
+        }
+      } else {
+        const a = Math.atan2(l.vy, l.vx);
+        ctx.save(); ctx.translate(l.x, l.y); ctx.rotate(a); ctx.shadowColor = '#ff5aa8'; ctx.shadowBlur = 14;
+        ctx.beginPath(); ctx.ellipse(0, 0, 15, 5, 0, 0, 7); ctx.fillStyle = '#ff5aa8'; ctx.fill();
+        ctx.beginPath(); ctx.ellipse(2, 0, 9, 2.2, 0, 0, 7); ctx.fillStyle = '#fff'; ctx.fill(); ctx.restore();
+      }
+    });
+    const b = f.boss; if (!b) return;
+    ctx.save(); ctx.translate(b.x, b.y);
+    // tractor glow while it charges a beam
+    if (f.lasers.some(l => l.beam && l.warn > 0)) { ctx.save(); ctx.globalAlpha = 0.5 + Math.sin(t * 30) * 0.3; dot(0, 26, 22, '#ff5aa8'); ctx.restore(); }
+    // dome and the alien inside
+    ctx.beginPath(); ctx.arc(0, -10, 34, Math.PI, 0); ctx.fillStyle = 'rgba(160,230,255,.35)'; ctx.fill(); strokeInk(3);
+    dot(0, -14, 17, '#7ee06a'); strokeInk(2.5);
+    [-1, 1].forEach(k => {
+      ctx.beginPath(); ctx.ellipse(k * 7, -15, 5, 7, k * 0.3, 0, 7); ctx.fillStyle = INK; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(k * 2, -24); ctx.lineTo(k * 13, -27); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.stroke(); // angry brows
+      ctx.beginPath(); ctx.moveTo(k * 6, -30); ctx.lineTo(k * 12, -46); ctx.stroke(); dot(k * 12, -47, 4, '#ff5aa8');
+    });
+    ctx.beginPath(); ctx.arc(0, -6, 5, Math.PI * 1.15, Math.PI * 1.85, false); ctx.strokeStyle = INK; ctx.lineWidth = 2.5; ctx.stroke();
+    // saucer
+    ctx.beginPath(); ctx.ellipse(0, 6, 78, 22, 0, 0, 7); ctx.fillStyle = b.hurt > 0 ? '#fff3dc' : '#8a7f9e'; ctx.fill(); strokeInk(3.5);
+    ctx.beginPath(); ctx.ellipse(0, 2, 70, 9, 0, 0, 7); ctx.fillStyle = '#5a2d82'; ctx.fill();
+    for (let i = 0; i < 7; i++) { const a = (i / 6 - 0.5) * 2.4; dot(Math.sin(a) * 60, 12 + Math.cos(a) * 4, 4.5, Math.floor(t * 6 + i) % 2 ? '#ffcf33' : '#ff5aa8'); }
+    ctx.restore();
+  }
+
+  // ---------- planets you pass in Infinite Mode (look, don't land) ----------
+  function drawInfPlanets(alt, t) {
+    const a = Math.max(0, alt - 30000) % 560000;
+    [{ at: 0, kind: 'mars', x: 0.2, r: 70 }, { at: 160000, kind: 'jupiter', x: 0.74, r: 200 }, { at: 360000, kind: 'saturn', x: 0.26, r: 120 }].forEach(pl => {
+      const y = -yOff - pl.r * 1.4 + (a - pl.at) * 0.0035, x = VW * pl.x;
+      if (y < -yOff - pl.r * 2 || y > BASE + pl.r * 2) return;
+      ctx.save(); ctx.globalAlpha = 0.92;
+      if (pl.kind === 'saturn') { ctx.beginPath(); ctx.ellipse(x, y, pl.r * 2.1, pl.r * 0.45, -0.25, Math.PI, Math.PI * 2); ctx.strokeStyle = '#d9c28a'; ctx.lineWidth = 14; ctx.stroke(); }
+      ctx.save(); ctx.beginPath(); ctx.arc(x, y, pl.r, 0, 7); ctx.clip();
+      const bands = pl.kind === 'jupiter' ? ['#e8c08a', '#c98a52', '#f2d9b0', '#b56a3a', '#e3b884', '#f5e2c2', '#c27a45', '#e8c08a']
+        : pl.kind === 'saturn' ? ['#f0dca4', '#e0c47e', '#f5e6b8', '#d6b46a', '#f0dca4'] : ['#d4623a'];
+      bands.forEach((c, i) => { ctx.fillStyle = c; ctx.fillRect(x - pl.r, y - pl.r + i * (2 * pl.r / bands.length), 2 * pl.r, 2 * pl.r / bands.length + 1); });
+      if (pl.kind === 'jupiter') { ctx.beginPath(); ctx.ellipse(x + pl.r * 0.3, y + pl.r * 0.28, pl.r * 0.2, pl.r * 0.11, 0, 0, 7); ctx.fillStyle = '#b5452b'; ctx.fill(); }
+      if (pl.kind === 'mars') { dot(x - pl.r * 0.3, y + pl.r * 0.1, pl.r * 0.22, '#a8452a'); dot(x + pl.r * 0.35, y - pl.r * 0.3, pl.r * 0.14, '#a8452a'); ctx.beginPath(); ctx.ellipse(x, y - pl.r * 0.92, pl.r * 0.4, pl.r * 0.14, 0, 0, 7); ctx.fillStyle = '#fff3dc'; ctx.fill(); }
+      const sh = ctx.createRadialGradient(x - pl.r * 0.4, y - pl.r * 0.4, pl.r * 0.2, x, y, pl.r * 1.05);
+      sh.addColorStop(0, 'rgba(255,255,255,.12)'); sh.addColorStop(1, 'rgba(11,8,32,.55)'); ctx.fillStyle = sh; ctx.fillRect(x - pl.r, y - pl.r, 2 * pl.r, 2 * pl.r);
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, pl.r, 0, 7); strokeInk(3);
+      if (pl.kind === 'saturn') { ctx.beginPath(); ctx.ellipse(x, y, pl.r * 2.1, pl.r * 0.45, -0.25, 0, Math.PI); ctx.strokeStyle = '#d9c28a'; ctx.lineWidth = 14; ctx.stroke(); }
+      ctx.restore();
+    });
   }
 
   function drawStar(x, y, rot) {
@@ -4469,7 +4640,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
     stars: [
       { html: '<div class="tut-big"><i class="gcoin"></i></div>', title: 'You found a Rainbow Star!', text: 'Rainbow stars are a special currency. Your stars now show up next to your cash.' },
       { html: '<div class="tut-big">1-3 <i class="gcoin"></i></div>', title: 'Rainbow Star Challenges', text: 'A new set of challenges just unlocked in the Challenges menu. Each one pays 1 to 3 rainbow stars, depending on how hard it is.' },
-      { html: '<div class="tut-big">?</div>', title: 'The Mystery Box', text: 'Save up 5 stars and roll the Mystery Box for a random cosmetic. Some are rare and golden ones are super rare. Wear them from your Inventory.' }
+      { html: '<div class="tut-big">?</div>', title: 'The Mystery Box', text: 'Save up 5 stars and $20,000, then roll the Mystery Box for a random cosmetic. Some are rare and golden ones are super rare. Wear them from your Inventory.' }
     ],
     station: [
       { pic: { asset: 'station', lv: 1 }, title: 'Your base is open!', text: 'This is your launch station. Teddy is in charge for now.' },
