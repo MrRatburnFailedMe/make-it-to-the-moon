@@ -827,7 +827,7 @@ window.__startGame = () => {
         ['Tri-Fin', 'A third fin. Bye bye, jammed controls.'],
         ['Shark Fins', 'Swept back and mean-looking.'],
         ['Lightning Fins', 'Huge fins with bolts painted on.'],
-        ['Comet Fins', 'Moon-metal fins. Turns on a dime.']
+        ['Comet Fins', 'Moon-metal fins. Turns on a dime and shrugs off a third of every hit.']
       ], futureCost: [120, 500, 1300, 3600, 8000, 20000], plus: true },
     { id: 'fuel', name: 'Fuel Tank', blurb: 'Burn longer and fly higher', color: '#ffcf33', shout: 'MORE FUEL!',
       levels: [
@@ -1118,14 +1118,14 @@ window.__startGame = () => {
 
   // ---------- Physics constants (shared by the projection and real flights) ----------
   // Distances are game meters. The planet is small so space and the Moon are reachable.
-  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 0, MY: 213000, RM: 8000, GM: 4 };
+  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 0, MY: 170000, RM: 8000, GM: 4 };
   const MOON_START = Math.hypot(P.MX, P.MY) - P.RM;
   const PREVIEW_SECS = [0, 8, 30, 90];
 
   // Each level rolls inside its own band, and every band sits fully above the band before it.
   const BANDS = {
-    engine: [[80, 95], [170, 195], [270, 305], [380, 425], [490, 550], [580, 650], [700, 780]],   // thrust (kN)
-    boosters: [[0, 0], [70, 85], [130, 155], [200, 230], [260, 300], [310, 360], [380, 440]],      // thrust (kN)
+    engine: [[80, 95], [170, 195], [270, 305], [380, 425], [490, 550], [580, 650], [820, 920]],   // thrust (kN)
+    boosters: [[0, 0], [70, 85], [130, 155], [200, 230], [260, 300], [310, 360], [470, 540]],      // thrust (kN)
     fuel: [[42, 52], [95, 110], [145, 165], [190, 215], [230, 260], [260, 295]]          // fuel (gal), hull adds 30 per level
   };
   const LO = { e: 0, b: 0, f: 0 }, HI = { e: 1, b: 1, f: 1 };
@@ -1322,7 +1322,7 @@ window.__startGame = () => {
     { id: 's_stars80', stars: 3, text: 'Grab 80 stars in one flight', goal: 80, prog: f => f.stars, req: b => b >= 20000 },
     { id: 's_dock', stars: 3, text: 'Fly through the space station ring', check: f => !!f.docked, req: b => b >= 25000 },
     { id: 's_alt100k', stars: 3, text: 'Reach 100 km', check: f => f.maxAlt >= 100000, req: b => b >= 60000 },
-    { id: 's_moon', stars: 3, text: 'Land on the Moon', check: f => f.end === 'moon', req: b => b >= 150000 }
+    { id: 's_moon', stars: 3, text: 'Land on the Moon', check: f => f.end === 'moon', req: b => b >= 120000 }
   ];
   const starCh = id => STAR_CHALLENGES.find(c => c.id === id);
   const starDoneId = id => !!(records.starDone && records.starDone[id]);
@@ -1647,7 +1647,8 @@ window.__startGame = () => {
     { outer: '#ff5a1f', inner: '#ffe066', glow: 0 },
     { outer: '#ffae1f', inner: '#fff7c2', glow: 8 },
     { outer: '#2fb6ff', inner: '#e6fbff', glow: 14 },
-    { outer: '#ff3df2', inner: '#ffffff', glow: 22 }
+    { outer: '#ff3df2', inner: '#ffffff', glow: 22 },
+    { outer: '#7fe9ff', inner: '#ffffff', glow: 30 } // Moon Forge
   ];
 
   // ---------- Cosmetics (Halloween collection) ----------
@@ -2013,7 +2014,7 @@ window.__startGame = () => {
   function drawBooster(G, side, r) {
     const { bW, bH, bX } = G;
     const x = side * bX, bot = -10, top = bot - bH;
-    const body = ['#e8423f', '#f4f2fb', '#4b7bff', '#2a2840'][r - 1] || '#e8423f';
+    const body = ['#e8423f', '#f4f2fb', '#4b7bff', '#2a2840', '#dfe6f5'][r - 1] || '#e8423f';
     ctx.beginPath();
     ctx.moveTo(x - bW * 0.28, bot); ctx.lineTo(x + bW * 0.28, bot); ctx.lineTo(x + bW * 0.4, 0); ctx.lineTo(x - bW * 0.4, 0); ctx.closePath();
     ctx.fillStyle = '#5d5a78'; ctx.fill(); strokeInk(3);
@@ -2033,16 +2034,21 @@ window.__startGame = () => {
       for (let yy = top + bH * 0.55; yy < top + bH * 0.85; yy += 14) {
         ctx.beginPath(); ctx.moveTo(x - bW, yy); ctx.lineTo(x + bW, yy - bW * 1.2); ctx.lineTo(x + bW, yy - bW * 1.2 + 7); ctx.lineTo(x - bW, yy + 7); ctx.fill();
       }
+    } else if (r === 5) { // Lunar Lifters: moon rock with glowing seams
+      [[0.25, 0.3, 4], [0.6, 0.55, 3], [0.35, 0.75, 3.5], [0.7, 0.2, 2.5]].forEach(([kx, ky, rad]) => dot(x - bW / 2 + bW * kx, top + bH * ky, rad, '#aab3cc'));
+      ctx.save(); ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 12; ctx.fillStyle = '#7fe9ff';
+      ctx.fillRect(x - bW, top + bH * 0.42, bW * 2, 4); ctx.fillRect(x - bW, top + bH * 0.88, bW * 2, 4); ctx.restore();
     }
     ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.fillRect(x - bW / 2 + 3, top, 4, bH);
     ctx.restore();
     rr(x - bW / 2, top, bW, bH, 5); strokeInk(3.5);
+    if (r === 5) { ctx.save(); ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 18; ctx.strokeStyle = 'rgba(127,233,255,.95)'; ctx.lineWidth = 2.5; rr(x - bW / 2 - 3, top - 3, bW + 6, bH + 6, 7); ctx.stroke(); ctx.restore(); }
     ctx.beginPath();
     ctx.moveTo(x - bW / 2, top + 2);
     ctx.quadraticCurveTo(x - bW / 2, top - bW * 0.9, x, top - bW * 1.05);
     ctx.quadraticCurveTo(x + bW / 2, top - bW * 0.9, x + bW / 2, top + 2);
     ctx.closePath();
-    ctx.fillStyle = r === 1 ? '#c9ced9' : r === 4 ? '#ffcf33' : '#ff5a5f'; ctx.fill(); strokeInk(3.5);
+    ctx.fillStyle = r === 1 ? '#c9ced9' : r === 4 ? '#ffcf33' : r === 5 ? '#7fe9ff' : '#ff5a5f'; ctx.fill(); strokeInk(3.5);
     ctx.fillStyle = '#3a3656';
     rr(side > 0 ? x - bW / 2 - 8 : x + bW / 2 - 4, top + bH * 0.25, 12, 6, 2); ctx.fill(); strokeInk(2);
   }
@@ -2051,7 +2057,7 @@ window.__startGame = () => {
     const { finX0: x0, finW, finH, nozH } = G;
     const yA = -nozH - finH, yB = -nozH - 2;
     const yTip = -nozH + finH * (r >= 3 ? 0.3 : 0.16);
-    const col = ['#9aa3b8', '#ff5a5f', '#3e7bff', '#262b45', '#ffcf33'][r];
+    const col = ['#9aa3b8', '#ff5a5f', '#3e7bff', '#262b45', '#ffcf33', '#dfe6f5'][r];
     ctx.save(); ctx.scale(side, 1);
     const path = () => {
       ctx.beginPath(); ctx.moveTo(x0, yA);
@@ -2069,15 +2075,21 @@ window.__startGame = () => {
       ctx.beginPath(); ctx.moveTo(bx + 6, by); ctx.lineTo(bx - 6, by + 18); ctx.lineTo(bx + 2, by + 18); ctx.lineTo(bx - 4, by + 34);
       ctx.lineTo(bx + 12, by + 12); ctx.lineTo(bx + 4, by + 12); ctx.lineTo(bx + 12, by); ctx.closePath(); ctx.fillStyle = INK; ctx.fill();
     }
+    if (r === 5) { // Comet Fins: moon metal, craters and a glowing comet streak
+      dot(x0 + finW * 0.35, yA + finH * 0.5, 4, '#aab3cc'); dot(x0 + finW * 0.6, yA + finH * 0.8, 3, '#aab3cc'); dot(x0 + finW * 0.25, yA + finH * 0.95, 2.5, '#aab3cc');
+      ctx.save(); ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 14; ctx.fillStyle = '#7fe9ff';
+      ctx.beginPath(); ctx.moveTo(x0, yA + finH * 0.3); ctx.lineTo(x0 + finW, yTip - finH * 0.3); ctx.lineTo(x0 + finW, yTip - finH * 0.18); ctx.lineTo(x0, yA + finH * 0.42); ctx.fill(); ctx.restore();
+    }
     ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.fillRect(x0, yA, 10, finH * 2);
     ctx.restore();
     path(); strokeInk(4);
+    if (r === 5) { ctx.save(); ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 18; ctx.strokeStyle = 'rgba(127,233,255,.95)'; ctx.lineWidth = 2.5; path(); ctx.stroke(); ctx.restore(); }
     ctx.restore();
   }
 
   function drawNozzles(G, r) {
     const { nozX, nozW, nozH } = G;
-    const col = ['#8a5a3b', '#7d8597', '#9aa3b8', '#3b4060', '#2a2840'][r];
+    const col = ['#8a5a3b', '#7d8597', '#9aa3b8', '#3b4060', '#2a2840', '#dfe6f5'][r];
     const shape = x => {
       ctx.beginPath();
       ctx.moveTo(x - nozW * 0.32, -nozH - 2); ctx.lineTo(x + nozW * 0.32, -nozH - 2);
@@ -2090,6 +2102,7 @@ window.__startGame = () => {
       shape(x); ctx.fillStyle = col; ctx.fill();
       if (r >= 3) { ctx.fillStyle = r === 3 ? '#2fb6ff' : '#ff3df2'; ctx.fillRect(x - nozW / 2 + 2, -5, nozW - 4, 4); }
       if (r === 0) { dot(x - 3, -nozH * 0.5, 2.5, '#5c3a26'); dot(x + 5, -nozH * 0.25, 2, '#5c3a26'); dot(x + 2, -nozH * 0.75, 1.8, '#c46a2a'); }
+      if (r === 5) { dot(x - 4, -nozH * 0.55, 2.6, '#aab3cc'); dot(x + 5, -nozH * 0.3, 1.9, '#aab3cc'); ctx.save(); ctx.shadowColor = '#7fe9ff'; ctx.shadowBlur = 14; ctx.fillStyle = '#7fe9ff'; ctx.fillRect(x - nozW / 2 + 2, -6, nozW - 4, 5); ctx.restore(); }
       ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.fillRect(x - nozW * 0.22, -nozH, 3, nozH - 3);
       shape(x); strokeInk(3.5);
     });
@@ -2176,7 +2189,7 @@ window.__startGame = () => {
     const { finH, nozH } = G;
     const yA = -nozH - finH * 0.75, yB = -nozH * 0.35;
     ctx.beginPath(); ctx.moveTo(-3, yA); ctx.lineTo(3, yA); ctx.lineTo(6, yB); ctx.lineTo(-6, yB); ctx.closePath();
-    ctx.fillStyle = ['#9aa3b8', '#ff5a5f', '#3e7bff', '#262b45', '#ffcf33'][r]; ctx.fill(); strokeInk(3.5);
+    ctx.fillStyle = ['#9aa3b8', '#ff5a5f', '#3e7bff', '#262b45', '#ffcf33', '#7fe9ff'][r]; ctx.fill(); strokeInk(3.5);
   }
 
   function drawPorthole(G, r, t, look, surprised) {
@@ -2905,7 +2918,7 @@ window.__startGame = () => {
             life: 0.6, max: 0.6, color: ['#ffe066', '#ff4fd8', '#58c4ff', '#fff'][i % 4] });
         });
       } else {
-        const pal = FLAMES[s.engine - 1];
+        const pal = FLAMES[state.engine - 1] || FLAMES[s.engine - 1];
         const sputter = s.engine === 1 && Math.random() < 0.08;
         G.nozX.forEach((x, i) => {
           const flick = 0.86 + 0.14 * Math.sin(t * 31 + i * 2) + Math.random() * 0.08;
@@ -2913,7 +2926,7 @@ window.__startGame = () => {
         });
       }
       if (G.bW) {
-        const pal = s.boosters === 1 ? { outer: '#bff5d0', inner: '#ffffff', glow: 0 } : (s.engine ? FLAMES[s.engine - 1] : FLAMES[0]);
+        const pal = s.boosters === 1 ? { outer: '#bff5d0', inner: '#ffffff', glow: 0 } : (s.engine ? FLAMES[state.engine - 1] || FLAMES[s.engine - 1] : FLAMES[0]);
         [-1, 1].forEach((side, i) => {
           const flick = 0.85 + 0.15 * Math.sin(t * 27 + i * 3) + Math.random() * 0.08;
           drawFlame(side * G.bX, s.boosters === 1 ? -6 : 0, G.bW * (s.boosters === 1 ? 0.45 : 0.75), (18 + s.boosters * 12) * (0.3 + thr * 1.1) * flick, pal);
@@ -2921,16 +2934,16 @@ window.__startGame = () => {
       }
     }
     // body parts, back to front
-    if (G.bW) [-1, 1].forEach(side => { ctx.save(); jiggle(s.boosters - 1); s.boosters === 1 ? drawBottle(G, side) : drawBooster(G, side, s.boosters - 1); ctx.restore(); });
-    [-1, 1].forEach(side => { ctx.save(); jiggle(s.fins); s.fins === 0 ? drawCardboardFin(G, side) : drawFin(G, side, s.fins - 1); ctx.restore(); });
+    if (G.bW) [-1, 1].forEach(side => { ctx.save(); jiggle(s.boosters - 1); s.boosters === 1 ? drawBottle(G, side) : drawBooster(G, side, state.boosters - 1); ctx.restore(); });
+    [-1, 1].forEach(side => { ctx.save(); jiggle(s.fins); s.fins === 0 ? drawCardboardFin(G, side) : drawFin(G, side, state.fins - 1); ctx.restore(); });
     cosFins(G, t);
-    ctx.save(); jiggle(s.engine); s.engine === 0 ? drawFireworks(G) : drawNozzles(G, s.engine - 1); ctx.restore();
+    ctx.save(); jiggle(s.engine); s.engine === 0 ? drawFireworks(G) : drawNozzles(G, state.engine - 1); ctx.restore();
     ctx.save(); jiggle(s.fuel); s.fuel === 0 ? drawGasCan(G) : drawTank(G, s.fuel - 1, t); ctx.restore();
     if (s.hull === 0) drawChairHull(G, t, look, surprised);
     else { drawBody(G, s.hull - 1, rocketLv() + 1); }
     cosPaint(G);
     if (s.hull > 0) cosSticker(G, t);
-    if (s.fins >= 3) drawCenterFin(G, s.fins - 1);
+    if (s.fins >= 3) drawCenterFin(G, state.fins - 1);
     if (s.hull > 0) drawPorthole(G, s.hull - 1, t, look, surprised);
     ctx.save(); jiggle(s.nose); s.nose === 0 ? drawTrafficCone(G) : drawNose(G, s.nose - 1, t); ctx.restore();
     cosNose(G, t);
@@ -4069,7 +4082,6 @@ window.__startGame = () => {
     const pp = ppmFor(f.infinite ? Math.max(0, altOf(f.x, f.y)) : Math.min(Math.max(0, altOf(f.x, f.y)), moonDistOf(f.x, f.y)));
     const flow = clamp(70 + Math.max(0, f.vy) * 0.5 * clamp(pp, 0.25, 1), 70, 320) * (f.fx.speed > 0 ? 2 : 1) * (f.infinite ? 1.5 : 1);
     if (f.invT > 0) f.invT -= dt;
-    f.shieldGrace = f.fx.shield > 0 ? 0.6 : Math.max(0, (f.shieldGrace || 0) - dt); // giants can't sneak through right as the bubble pops
     const top = -yOff - 50;
     const altNow = altOf(f.x, f.y);
     if (active && f.left && altNow > 15 && altNow < P.SPACE * 0.9 && f.vy > 5) {
@@ -4227,10 +4239,8 @@ window.__startGame = () => {
     });
     if (active && !f.hide) for (const g of f.giants) {
       if (g.warn > 0) continue;
-      if ((f.fx.shield > 0 || f.shieldGrace > 0) && Math.hypot(g.x - pts[1].x, g.y - pts[1].y) < g.r * 0.82 + shieldR(pts, nose) + 20) {
-        g.dead = true; f.smashed++; burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#3ee6b0', '#fff3dc'], 40, 9); Sound.block(); shakeT = 0.3; continue;
-      }
       if (pts.some(q => Math.hypot(g.x - q.x, g.y - q.y) < g.r * 0.82 + hitR * 0.7)) {
+        if (f.fx.shield > 0) { f.fx.shield = 0; burst(pts[1].x, pts[1].y, ['#3ee6b0', '#c9fff0', '#fff3dc'], 34, 8); } // giants pop the bubble like it's nothing
         if (f.infinite) { g.dead = true; takeHit(f, 0.1); burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#ff5a5f'], 40, 9); Sound.hit(); shakeT = 0.6; continue; }
         shout('SQUASHED!', pts[1].x, pts[1].y - 60, '#ff5a5f', 1.6); endFlight('crushed'); return;
       }
@@ -4288,7 +4298,7 @@ window.__startGame = () => {
         else {
           const h = HIT[a.kind || 'rock'];
           breakThing(a, '#ff5a5f', true);
-          if (takeHit(f, f.infinite ? 0.05 + infD(f) * 0.01 : h.dmg * 0.6)) { Sound.hit(); f.vy *= 1 - (1 - h.slow) * (f.infinite ? 0.15 : 0.45); shakeT = 0.45; }
+          if (takeHit(f, (f.infinite ? 0.05 + infD(f) * 0.01 : h.dmg * 0.6) * (state.fins > MAX ? 0.67 : 1))) { Sound.hit(); f.vy *= 1 - (1 - h.slow) * (f.infinite ? 0.15 : 0.45); shakeT = 0.45; }
           shout(`${h.text} -${Math.round(h.dmg * 60)}% POWER`, a.x, a.y - 40, '#ff5a5f', 1.2);
         }
       }
@@ -4474,7 +4484,7 @@ window.__startGame = () => {
     ctx.restore();
   }
   const STATION_ALT = 18000;
-  const DEEP_LO = 40000, DEEP_HI = 190000;
+  const DEEP_LO = 40000, DEEP_HI = 150000;
   function drawStation2(st, t) {
     const y = st.y, gx = st.gx, half = st.gap / 2;
     // trusses out to both edges with solar panel wings
