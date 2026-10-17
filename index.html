@@ -1088,6 +1088,11 @@ window.__startGame = () => {
       nope: () => tone(200, 0.18, 'square', 0.08, 140),
       alarm: () => seq([880, 620, 880, 620], 150, 'square', 0.08),
       boing: () => tone(160, 0.45, 'sine', 0.25, 700),
+      cash: () => { // ka-ching: register keys, the drawer, then the bell
+        tone(1400, 0.03, 'square', 0.06); setTimeout(() => tone(1100, 0.03, 'square', 0.06), 45);
+        setTimeout(() => noise(0.12, 0.25, 3000), 90);
+        setTimeout(() => { tone(2093, 0.6, 'triangle', 0.12); tone(2637, 0.7, 'sine', 0.08); }, 150);
+      },
       engine(level) {
         const want = settings.sfx && settings.rumble && settings.volume ? level : 0;
         if (!ac) { if (want <= 0) return; if (!ensure()) return; }
@@ -1501,7 +1506,7 @@ window.__startGame = () => {
     if (u.station) syncStationLife();
     const el = cardRefs[u.id].el;
     el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
-    if (dir > 0) { celebrate(u); Sound.upgrade(); } else Sound.down();
+    if (dir > 0) { celebrate(u); Sound.cash(); } else Sound.down();
     if (dir > 0 && !u.station && rocketLv() === BASE_AT && !(records.seen && records.seen.base)) {
       records.seen = records.seen || {}; records.seen.base = true; save();
       setTimeout(() => toast('NEW: BASE UPGRADES UNLOCKED! Scroll down in the shop.'), 400);
@@ -2766,6 +2771,7 @@ window.__startGame = () => {
   function drawNeighborhood(t) {
     const g = GROUND - 34; // sits up on the hill behind the fence
     for (const o of HOOD) {
+      if (o.x < -VW + 20 || o.x + (o.w || 30) > VW * 2 - 20) continue; // stay on the ground strip
       if (o.kind === 'house') {
         const { x, w, h } = o;
         if (o.chimney) { ctx.fillStyle = '#3a2d52'; ctx.fillRect(x + w * 0.65, g - h - 30, 10, 24); }
@@ -2792,6 +2798,43 @@ window.__startGame = () => {
         }
         ctx.restore();
       }
+    }
+  }
+  let ambient = [], ambT = 0;
+  // scroll: how fast the world is sliding down the screen (0 on the launch pad)
+  function updateAmbient(dt, scroll, spawning) {
+    ambT -= dt;
+    if (spawning && ambT <= 0 && ambient.length < (scroll > 0 ? 14 : 7)) {
+      ambT = scroll > 0 ? 0.45 + Math.random() * 0.6 : 1.4 + Math.random() * 1.6;
+      const r = Math.random(), kind = r < 0.55 ? 'balloon' : r < 0.85 ? 'lantern' : 'plane';
+      const fromTop = scroll > 40;
+      const o = { kind, x: 30 + Math.random() * (VW - 60), y: fromTop ? -yOff - 30 : GROUND - 20, p: Math.random() * 6,
+        rise: kind === 'plane' ? -6 : -(18 + Math.random() * 22), par: 0.5 + Math.random() * 0.25, vx: kind === 'plane' ? (Math.random() < 0.5 ? -1 : 1) * (45 + Math.random() * 35) : 0,
+        c: ['#ff5a5f', '#ffcf33', '#3ee6b0', '#58c4ff', '#c77dff', '#ff9ae8'][Math.floor(Math.random() * 6)], s: 0.8 + Math.random() * 0.5 };
+      if (kind === 'plane') { o.x = o.vx > 0 ? -20 : VW + 20; o.y = fromTop ? -yOff + 40 + Math.random() * 200 : 160 + Math.random() * 200; }
+      ambient.push(o);
+    }
+    ambient.forEach(o => { o.p += dt; o.x += (o.vx + Math.sin(o.p * 0.9) * 8) * dt; o.y += (o.rise + scroll * o.par) * dt; });
+    ambient = ambient.filter(o => o.y > -yOff - 80 && o.y < BASE + 80 && o.x > -60 && o.x < VW + 60);
+  }
+  function drawAmbient(t) {
+    for (const o of ambient) {
+      ctx.save(); ctx.translate(o.x, o.y); ctx.scale(o.s, o.s);
+      if (o.kind === 'balloon') {
+        ctx.strokeStyle = 'rgba(255,243,220,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 9);
+        for (let i = 1; i <= 4; i++) ctx.lineTo(Math.sin(o.p * 3 + i) * 2.5, 9 + i * 6); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(0, 0, 7, 9, 0, 0, 7); ctx.fillStyle = o.c; ctx.fill(); strokeInk(1.5);
+        dot(-2.5, -3, 2, 'rgba(255,255,255,.6)');
+      } else if (o.kind === 'lantern') {
+        ctx.save(); ctx.shadowColor = '#ffb54a'; ctx.shadowBlur = 14; ctx.globalAlpha = 0.85 + Math.sin(o.p * 6) * 0.1;
+        ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(6, -8); ctx.lineTo(8, 8); ctx.lineTo(-8, 8); ctx.closePath(); ctx.fillStyle = '#ffb54a'; ctx.fill(); ctx.restore();
+        dot(0, 4, 2.5, '#fff3c4');
+      } else {
+        ctx.scale(o.vx > 0 ? 1 : -1, 1); ctx.rotate(Math.sin(o.p * 2) * 0.08);
+        ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-10, -6); ctx.lineTo(-6, 0); ctx.lineTo(-10, 6); ctx.closePath(); ctx.fillStyle = '#fff3dc'; ctx.fill(); strokeInk(1.5);
+        ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, 0); ctx.strokeStyle = 'rgba(11,8,32,.4)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+      ctx.restore();
     }
   }
   function drawGroundBack(t, st, dt, motion) {
@@ -3069,7 +3112,7 @@ window.__startGame = () => {
     records.gold -= BOX_COST; records.coins -= BOX_CASH;
     const won = rollBox();
     owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save(); renderUI();
-    boxAnim = { phase: 'shake', t: 0, won, ticks: 0 }; $('boxResult').hidden = true; Sound.click(); renderBox();
+    boxAnim = { phase: 'shake', t: 0, won, ticks: 0 }; $('boxResult').hidden = true; Sound.cash(); renderBox();
   });
   $('boxBack').addEventListener('click', () => { Sound.click(); closeBox(); });
   $('boxInv').addEventListener('click', () => { Sound.click(); openCos(); });
@@ -3715,6 +3758,11 @@ window.__startGame = () => {
       drawGroundBack(t, st, dt, motion); drawTramp(rx(), base, s.pad, t, 'back'); ctx.restore(); ctx.globalAlpha = 1;
     }
     if (alt < 9000) drawClouds(w2s, ppm);
+    { // balloons, lanterns and paper planes keep the low sky lively; they fade out on the way to space
+      const scroll = f.phase === 'done' ? 0 : clamp(Math.max(0, f.vy) * 0.5 * clamp(ppm, 0.25, 1), 0, 320);
+      updateAmbient(dt, scroll, alt < 3000 && !f.infinite);
+      ctx.save(); ctx.globalAlpha = 1 - smooth((alt - 2500) / 2000); drawAmbient(t); ctx.restore();
+    }
     const mc = w2s(P.MX, P.MY);
     const moonVisible = f.infinite ? true : drawFlightMoon(mc, P.RM * ppm, f);
     f.moonScr = { x: mc.x, y: mc.y, r: P.RM * ppm };
@@ -4590,6 +4638,7 @@ window.__startGame = () => {
     drawSkyBg(t, 0);
     drawDecoMoon(1);
     drawSatellites(t, st);
+    updateAmbient(dt, 0, true); drawAmbient(t);
     drawGroundBack(t, st, dt, motion);
     drawTramp(rx(), base, s.pad, t, 'back');
 
