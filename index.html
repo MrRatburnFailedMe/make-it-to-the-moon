@@ -865,7 +865,7 @@ window.__startGame = () => {
       ['Twin Pistons', 'Heavy-duty springs with hydraulic pistons.'],
       ['Hyper Coil', 'A glowing energy coil. Starts you way up in the sky.']
     ], futureCost: [6000, 10000, 15000, 22000] };
-  const PAD_V = [0, 200, 340, 500, 700]; // upward speed (m/s) the spring gives you
+  const PAD_V = [0, 70, 120, 170, 220]; // upward speed (m/s) the spring gives you
   const ALL = [...UPGRADES, STATION, DISH, PAD];
   ALL.forEach(u => { u.max = u.max || MAX; u.cost = u.futureCost.slice(0, u.max); }); // prices in coins
 
@@ -1113,7 +1113,7 @@ window.__startGame = () => {
 
   // ---------- Physics constants (shared by the projection and real flights) ----------
   // Distances are game meters. The planet is small so space and the Moon are reachable.
-  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 8000, MY: 208000, RM: 8000, GM: 4 };
+  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 8000, MY: 213000, RM: 8000, GM: 4 };
   const MOON_START = Math.hypot(P.MX, P.MY) - P.RM;
   const PREVIEW_SECS = [0, 8, 30, 90];
 
@@ -1141,7 +1141,7 @@ window.__startGame = () => {
     while (t < 600) {
       const g = P.G0 * (P.R / (P.R + y)) ** 2, rho = Math.exp(-y / 3000);
       let acc = -g - Math.sign(v) * v * v * st.cd * rho;
-      if (f > 0) { acc += st.accel; f -= P.BURN * dt; }
+      if (f > 0) { acc += Math.min(st.accel, 25 + t * 20); f -= P.BURN * dt; }
       v += acc * dt; y += v * dt; t += dt;
       if (y < 0) { y = 0; v = Math.max(v, 0); }
       if (f <= 0) return y + Math.max(0, v) / 1.2; // no coasting: the ship stalls right after the tank runs dry
@@ -3274,7 +3274,8 @@ window.__startGame = () => {
       ax -= f.vx / v * d; ay -= f.vy / v * d;
     }
     f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.infinite) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
-    if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
+    // gentle start: big engines ramp up over the first few seconds of burning (junk rockets are never held back)
+    if (f.burning) { f.burnT = (f.burnT || 0) + dt; ay += Math.min(f.st.accel * f.power, 25 + f.burnT * 20); if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
     // no coasting: let go of thrust and the ship stalls within a second or two, then drops fast
     if (!f.burning && f.left && (f.phase === 'ascent' || f.phase === 'space')) {
@@ -4462,7 +4463,7 @@ window.__startGame = () => {
     ctx.restore();
   }
   const STATION_ALT = 18000;
-  const DEEP_LO = 40000, DEEP_HI = 185000;
+  const DEEP_LO = 40000, DEEP_HI = 190000;
   function drawStation2(st, t) {
     const y = st.y, gx = st.gx, half = st.gap / 2;
     // trusses out to both edges with solar panel wings
