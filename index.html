@@ -508,7 +508,9 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 .box-result.r-e { box-shadow: 0 0 0 3px #c77dff inset; } .box-result.r-r { box-shadow: 0 0 0 3px #58c4ff inset; }
 .box-bottom { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .box-bottom p { margin: 0; color: var(--muted); font-weight: 700; text-align: center; }
-.btn.roll { font-size: 44px; padding: 10px 70px; border-width: 4px; border-radius: 20px; color: #fff; display: flex; align-items: center; gap: 14px;
+.roll-row { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.btn.roll.cash { background: linear-gradient(135deg, #3f9e4a, #6fd66f, #3f9e4a); }
+.btn.roll { font-size: 40px; padding: 10px 40px; border-width: 4px; border-radius: 20px; color: #fff; display: flex; align-items: center; gap: 14px;
   background: linear-gradient(135deg, #ff5a5f, #ff9a3c, #ffcf33, #3ee6b0, #58c4ff, #c77dff); box-shadow: 0 7px 0 var(--ink); text-shadow: 0 3px 0 var(--ink); }
 .btn.roll small { font-size: 22px; background: rgba(0,0,0,.35); border-radius: 10px; padding: 2px 10px; }
 .btn.roll:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-2px); }
@@ -642,7 +644,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
       <div class="box-result" id="boxResult" hidden></div>
     </div>
     <div class="box-bottom">
-      <button class="btn roll" id="rollBtn" type="button">ROLL<small><i class="gcoin"></i>5 + <i class="coin"></i>20,000</small></button>
+      <div class="roll-row"><button class="btn roll" id="rollBtn" type="button">ROLL<small><i class="gcoin"></i>5</small></button><button class="btn roll cash" id="rollCashBtn" type="button">ROLL<small><i class="coin"></i>20,000</small></button></div>
       <p id="boxMsg"></p>
       <div class="mbox-odds"><span class="rc">Common</span><span class="rr">Rare</span><span class="re">Epic</span><span class="rL">Golden</span></div>
     </div>
@@ -1298,41 +1300,55 @@ window.__startGame = () => {
   }
   // ---------- Rainbow Star Challenges: the only way to earn stars ----------
   // Three are active at a time (easy, medium, hard when possible). Finish one and a new one takes its place.
+  // n(L) gives the goal at level L (how many times you've finished it). once: true means it can only be done one time.
+  const kmTxt = m => (m / 1000).toFixed(m % 1000 ? 1 : 0) + ' km';
+  const grow = (base, L, k) => Math.round(base * (1 + k * L));
   const STAR_CHALLENGES = [
-    { id: 's_smash5', stars: 1, text: 'Smash 5 things in one flight', goal: 5, prog: f => f.smashed },
-    { id: 's_stars15', stars: 1, text: 'Grab 15 stars in one flight', goal: 15, prog: f => f.stars },
-    { id: 's_close3', stars: 1, text: 'Get 3 close calls in one flight', goal: 3, prog: f => f.closeCalls },
-    { id: 's_bird2', stars: 1, text: 'Smash 2 birds in one flight', goal: 2, prog: f => f.broke.bird },
-    { id: 's_balloon', stars: 1, text: 'Pop a hot air balloon', check: f => f.broke.balloon >= 1 },
-    { id: 's_fly35', stars: 1, text: 'Stay in the air for 35 seconds', check: f => f.ft >= 35 && f.left },
-    { id: 's_rings2', stars: 1, text: 'Fly through 2 boost rings in one flight', goal: 2, prog: f => f.rings, req: b => b >= 1500 },
-    { id: 's_alt10k', stars: 2, text: 'Reach 10 km', check: f => f.maxAlt >= 10000, req: b => b >= 4000 },
-    { id: 's_clean6k', stars: 2, text: 'Reach 6 km without getting hit', check: f => f.hits === 0 && f.maxAlt >= 6000, req: b => b >= 4000 },
-    { id: 's_drone2', stars: 2, text: 'Destroy 2 drones in one flight', goal: 2, prog: f => f.broke.drone, req: b => b >= 3000 },
-    { id: 's_plane2', stars: 2, text: 'Destroy 2 planes in one flight', goal: 2, prog: f => f.broke.plane, req: b => b >= 3000 },
-    { id: 's_close8', stars: 2, text: 'Get 8 close calls in one flight', goal: 8, prog: f => f.closeCalls, req: b => b >= 3000 },
-    { id: 's_rings6', stars: 2, text: 'Fly through 6 boost rings in one flight', goal: 6, prog: f => f.rings, req: b => b >= 6000 },
-    { id: 's_stars40', stars: 2, text: 'Grab 40 stars in one flight', goal: 40, prog: f => f.stars, req: b => b >= 5000 },
-    { id: 's_spacefuel', stars: 2, text: 'Reach space with half your fuel left', check: f => f.maxAlt >= P.SPACE && f.fuel >= f.st.fuel * 0.5, req: b => b >= 8000 },
-    { id: 's_clean20k', stars: 3, text: 'Reach 20 km without getting hit', check: f => f.hits === 0 && f.maxAlt >= 20000, req: b => b >= 15000 },
-    { id: 's_rush', stars: 3, text: 'Win a Fuel Rush', check: f => !!f.eventWin, req: b => b >= 10000 },
-    { id: 's_close20', stars: 3, text: 'Get 20 close calls in one flight', goal: 20, prog: f => f.closeCalls, req: b => b >= 10000 },
-    { id: 's_deep', stars: 3, text: 'Reach Deep Space (40 km)', check: f => f.maxAlt >= DEEP_LO, req: b => b >= 20000 },
-    { id: 's_ufo', stars: 3, text: 'Destroy a UFO', check: f => (f.broke.ufo || 0) >= 1, req: b => b >= 20000 },
-    { id: 's_stars80', stars: 3, text: 'Grab 80 stars in one flight', goal: 80, prog: f => f.stars, req: b => b >= 20000 },
-    { id: 's_dock', stars: 3, text: 'Fly through the space station ring', check: f => !!f.docked, req: b => b >= 25000 },
-    { id: 's_alt100k', stars: 3, text: 'Reach 100 km', check: f => f.maxAlt >= 100000, req: b => b >= 60000 },
-    { id: 's_moon', stars: 3, text: 'Land on the Moon', check: f => f.end === 'moon', req: b => b >= 120000 }
+    { id: 's_smash5', stars: 1, n: L => grow(5, L, 0.6), text: n => `Smash ${n} things in one flight`, prog: f => f.smashed },
+    { id: 's_stars15', stars: 1, n: L => grow(15, L, 0.6), text: n => `Grab ${n} stars in one flight`, prog: f => f.stars },
+    { id: 's_close3', stars: 1, n: L => grow(3, L, 0.7), text: n => `Get ${n} close calls in one flight`, prog: f => f.closeCalls },
+    { id: 's_bird2', stars: 1, n: L => grow(2, L, 0.5), text: n => `Smash ${n} birds in one flight`, prog: f => f.broke.bird },
+    { id: 's_balloon', stars: 1, n: L => 1 + L, text: n => n === 1 ? 'Pop a hot air balloon' : `Pop ${n} hot air balloons in one flight`, prog: f => f.broke.balloon },
+    { id: 's_fly35', stars: 1, n: L => grow(35, L, 0.3), text: n => `Stay in the air for ${n} seconds`, check: (f, n) => f.ft >= n && f.left },
+    { id: 's_rings2', stars: 1, n: L => grow(2, L, 0.5), text: n => `Fly through ${n} boost rings in one flight`, prog: f => f.rings, req: b => b >= 1500 },
+    { id: 's_alt10k', stars: 2, n: L => Math.min(150000, grow(10000, L, 0.4)), text: n => `Reach ${kmTxt(n)}`, check: (f, n) => f.maxAlt >= n, req: b => b >= 4000 },
+    { id: 's_clean6k', stars: 2, n: L => Math.min(150000, grow(6000, L, 0.5)), text: n => `Reach ${kmTxt(n)} without getting hit`, check: (f, n) => f.hits === 0 && f.maxAlt >= n, req: b => b >= 4000 },
+    { id: 's_drone2', stars: 2, n: L => grow(2, L, 0.5), text: n => `Destroy ${n} drones in one flight`, prog: f => f.broke.drone, req: b => b >= 3000 },
+    { id: 's_plane2', stars: 2, n: L => grow(2, L, 0.5), text: n => `Destroy ${n} planes in one flight`, prog: f => f.broke.plane, req: b => b >= 3000 },
+    { id: 's_close8', stars: 2, n: L => grow(8, L, 0.5), text: n => `Get ${n} close calls in one flight`, prog: f => f.closeCalls, req: b => b >= 3000 },
+    { id: 's_rings6', stars: 2, n: L => grow(6, L, 0.5), text: n => `Fly through ${n} boost rings in one flight`, prog: f => f.rings, req: b => b >= 6000 },
+    { id: 's_stars40', stars: 2, n: L => grow(40, L, 0.5), text: n => `Grab ${n} stars in one flight`, prog: f => f.stars, req: b => b >= 5000 },
+    { id: 's_spacefuel', stars: 2, n: L => Math.min(80, 50 + 10 * L), text: n => `Reach space with ${n}% of your fuel left`, check: (f, n) => f.maxAlt >= P.SPACE && f.fuel >= f.st.fuel * n / 100, req: b => b >= 8000 },
+    { id: 's_clean20k', stars: 3, n: L => Math.min(150000, grow(20000, L, 0.5)), text: n => `Reach ${kmTxt(n)} without getting hit`, check: (f, n) => f.hits === 0 && f.maxAlt >= n, req: b => b >= 15000 },
+    { id: 's_rush', stars: 3, once: true, text: () => 'Win a Fuel Rush', check: f => !!f.eventWin, req: b => b >= 10000 },
+    { id: 's_close20', stars: 3, n: L => grow(20, L, 0.4), text: n => `Get ${n} close calls in one flight`, prog: f => f.closeCalls, req: b => b >= 10000 },
+    { id: 's_deep', stars: 3, n: L => Math.min(150000, grow(DEEP_LO, L, 0.5)), text: n => L0(n) ? 'Reach Deep Space (40 km)' : `Reach ${kmTxt(n)}`, check: (f, n) => f.maxAlt >= n, req: b => b >= 20000 },
+    { id: 's_ufo', stars: 3, n: L => 1 + L, text: n => n === 1 ? 'Destroy a UFO' : `Destroy ${n} UFOs in one flight`, prog: f => f.broke.ufo || 0, req: b => b >= 20000 },
+    { id: 's_stars80', stars: 3, n: L => grow(80, L, 0.4), text: n => `Grab ${n} stars in one flight`, prog: f => f.stars, req: b => b >= 20000 },
+    { id: 's_dock', stars: 3, once: true, text: () => 'Fly through the space station ring', check: f => !!f.docked, req: b => b >= 25000 },
+    { id: 's_alt100k', stars: 3, n: L => Math.min(150000, grow(100000, L, 0.2)), text: n => `Reach ${kmTxt(n)}`, check: (f, n) => f.maxAlt >= n, req: b => b >= 60000 },
+    { id: 's_moon', stars: 3, once: true, text: () => 'Land on the Moon', check: f => f.end === 'moon', req: b => b >= 120000 }
   ];
-  const starCh = id => STAR_CHALLENGES.find(c => c.id === id);
-  const starDoneId = id => !!(records.starDone && records.starDone[id]);
+  const L0 = n => n === DEEP_LO;
+  const starLvl = id => (records.starLvl && records.starLvl[id]) || 0;
+  const starTpl = id => STAR_CHALLENGES.find(c => c.id === id);
+  // the live version of a challenge at its current difficulty
+  function starCh(id) {
+    const c = starTpl(id); if (!c) return null;
+    const n = c.n ? c.n(starLvl(id)) : 1;
+    return { id, stars: c.stars, text: c.text(n), goal: c.prog ? n : undefined, prog: c.prog, check: c.check ? f => c.check(f, n) : undefined };
+  }
+  const starDoneId = id => { const c = starTpl(id); return !!(c && c.once && records.starDone && records.starDone[id]); };
   function ensureStarCh() {
-    records.starDone = records.starDone || {};
-    let act = (records.starCh || []).filter(id => starCh(id) && !starDoneId(id));
+    records.starDone = records.starDone || {}; records.starLvl = records.starLvl || {};
+    // older saves marked repeatable challenges as done forever: bring them back one level harder
+    for (const id in records.starDone) { const c = starTpl(id); if (c && !c.once) { records.starLvl[id] = Math.max(1, records.starLvl[id] || 0); delete records.starDone[id]; } }
+    let act = (records.starCh || []).filter(id => starTpl(id) && !starDoneId(id));
     while (act.length < 3) {
-      const cands = STAR_CHALLENGES.filter(c => !starDoneId(c.id) && !act.includes(c.id) && (!c.req || c.req(records.best || 0)));
+      // least-finished challenges come up first, so everything gets its turn before repeats
+      const cands = STAR_CHALLENGES.filter(c => !starDoneId(c.id) && !act.includes(c.id) && (!c.req || c.req(records.best || 0))).sort((a, b) => starLvl(a.id) - starLvl(b.id));
       if (!cands.length) break;
-      const have = act.map(id => starCh(id).stars), want = [1, 2, 3].find(s => !have.includes(s) && cands.some(c => c.stars === s));
+      const have = act.map(id => starTpl(id).stars), want = [1, 2, 3].find(s => !have.includes(s) && cands.some(c => c.stars === s));
       act.push((cands.find(c => c.stars === want) || cands[0]).id);
     }
     records.starCh = act;
@@ -1343,14 +1359,15 @@ window.__startGame = () => {
     const list = ensureStarCh();
     const rows = list.map(c => `<div class="chal star-chal"><i class="chk"></i><span>${c.text}</span><b class="sreward">${starIcons(c.stars)}</b></div>`).join('')
       || '<div class="chal"><span>You finished every Rainbow Star Challenge. Amazing!</span></div>';
-    return `<div class="chal-head star-head"><b>Rainbow Star Challenges</b><span>${Object.keys(records.starDone || {}).length} done</span></div><div class="chal-list">${rows}</div>`
-      + (compact ? '' : '<p class="chal-foot">These pay rainbow stars instead of cash: harder ones give more. Finish one and a new one appears. Spend stars on Mystery Boxes.</p>');
+    return `<div class="chal-head star-head"><b>Rainbow Star Challenges</b><span>${Object.keys(records.starDone || {}).length + Object.values(records.starLvl || {}).reduce((a, v) => a + v, 0)} done</span></div><div class="chal-list">${rows}</div>`
+      + (compact ? '' : '<p class="chal-foot">These pay rainbow stars instead of cash: harder ones give more. Finish one and a new one appears. Finished challenges come back later with a tougher goal and the same reward.</p>');
   }
   function checkStarChallenges(f) {
     for (const id of (records.starCh || [])) {
       const c = starCh(id);
       if (!c || starDoneId(id) || !chalMet(c, f)) continue;
-      records.starDone[id] = records.day;
+      if (starTpl(id).once) records.starDone[id] = records.day; else records.starLvl[id] = starLvl(id) + 1;
+      records.starCh = records.starCh.filter(x => x !== id); // swap in a different one next
       f.starDone.push(c); f.starsEarned = (f.starsEarned || 0) + c.stars;
       floats.push({ text: `+${c.stars} RAINBOW STAR${c.stars > 1 ? 'S' : ''}!`, x: VW / 2, y: (BASE - yOff) / 2 - 190, life: 2, max: 2, color: '#ff9ae8' });
       Sound.gold();
@@ -3071,7 +3088,7 @@ window.__startGame = () => {
   // ---------- Mystery Box screen ----------
   let boxPrev = 'shop', boxAnim = { phase: 'idle', t: 0, won: null }, boxSparks = [];
   const RCOL = { c: '#c9d2e6', r: '#58c4ff', e: '#c77dff', L: '#ffcf33' };
-  const canRoll = () => (records.gold || 0) >= BOX_COST && (records.coins || 0) >= BOX_CASH;
+  const canRoll = kind => kind === 'cash' ? (records.coins || 0) >= BOX_CASH : kind === 'stars' ? (records.gold || 0) >= BOX_COST : canRoll('cash') || canRoll('stars');
   function openBox() {
     if (flight) return;
     closeCos(); boxPrev = screen === 'box' ? boxPrev : screen; showScreen('box');
@@ -3082,21 +3099,23 @@ window.__startGame = () => {
   function renderBox() {
     const left = boxPool().length, stars = records.gold || 0, busy = boxAnim.phase === 'shake';
     $('boxStars').textContent = starText();
-    $('rollBtn').disabled = busy || !left;
-    $('rollBtn').classList.toggle('broke', !canRoll());
+    $('rollBtn').disabled = $('rollCashBtn').disabled = busy || !left;
+    $('rollBtn').classList.toggle('broke', !canRoll('stars')); $('rollCashBtn').classList.toggle('broke', !canRoll('cash'));
     $('boxMsg').textContent = busy ? 'Here it comes...' : !left ? 'You collected every cosmetic. Legend!'
       : canRoll() ? `${left} cosmetic${left === 1 ? '' : 's'} left to find. Golden ones are super rare!`
-      : [stars < BOX_COST ? `${BOX_COST - stars} more rainbow star${BOX_COST - stars === 1 ? '' : 's'}` : '', (records.coins || 0) < BOX_CASH ? `$${(BOX_CASH - (records.coins || 0)).toLocaleString()} more cash` : ''].filter(Boolean).join(' and ').replace(/^/, 'You need ') + '.';
+      : `Pay with ${BOX_COST} rainbow stars or $${BOX_CASH.toLocaleString()}. You need ${BOX_COST - stars} more star${BOX_COST - stars === 1 ? '' : 's'} or $${(BOX_CASH - (records.coins || 0)).toLocaleString()} more.`;
   }
-  $('rollBtn').addEventListener('click', () => {
+  const roll = kind => {
     if (boxAnim.phase === 'shake' || !boxPool().length) return;
-    const b = $('rollBtn');
-    if (!canRoll()) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
-    records.gold -= BOX_COST; records.coins -= BOX_CASH;
+    const b = $(kind === 'cash' ? 'rollCashBtn' : 'rollBtn');
+    if (!canRoll(kind)) { Sound.nope(); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake'); return; }
+    if (kind === 'cash') records.coins -= BOX_CASH; else records.gold -= BOX_COST;
     const won = rollBox();
     owned()[won.slot + ':' + won.it.id] = 1; records.cos = records.cos || {}; records.cos[won.slot] = won.it.id; save(); renderUI();
     boxAnim = { phase: 'shake', t: 0, won, ticks: 0 }; $('boxResult').hidden = true; Sound.cash(); renderBox();
-  });
+  };
+  $('rollBtn').addEventListener('click', () => roll('stars'));
+  $('rollCashBtn').addEventListener('click', () => roll('cash'));
   $('boxBack').addEventListener('click', () => { Sound.click(); closeBox(); });
   $('boxInv').addEventListener('click', () => { Sound.click(); openCos(); });
   window.addEventListener('keydown', e => { if (e.key === 'Escape' && screen === 'box' && !cosOpen) closeBox(); });
@@ -3446,6 +3465,7 @@ window.__startGame = () => {
     records.flights++;
     records.best = Math.max(records.best, f.maxAlt);
     if (f.reached) records.space = true;
+    const firstMoon = kind === 'moon' && !records.moon;
     if (kind === 'moon') {
       if (!records.moon) { f.starsEarned = (f.starsEarned || 0) + 5; records.starFound = true; queueTut('plus'); }
       records.moon = true;
@@ -3470,7 +3490,7 @@ window.__startGame = () => {
     records.gold = (records.gold || 0) + (f.starsEarned || 0); ensureStarCh();
     saveRecords();
     const isRec = f.maxAlt > prevBest && f.maxAlt > 1;
-    if (kind === 'moon') setTimeout(() => { if (flight === f) playOutro(() => { showScreen('launch'); showReport(f, isRec); }); }, 900);
+    if (firstMoon) setTimeout(() => { if (flight === f) playOutro(() => { showScreen('launch'); showReport(f, isRec); }); }, 900);
     else setTimeout(() => showReport(f, isRec), kind === 'abort' ? 0 : 1300);
   }
 
@@ -3491,7 +3511,7 @@ window.__startGame = () => {
     if (flight !== f) return;
     const secs = Math.round(f.ft);
     $('repDay').textContent = 'INFINITE MODE';
-    $('repTitle').textContent = f.end === 'abort' ? 'RUN ENDED' : 'TOO MUCH DAMAGE!';
+    $('repTitle').textContent = f.end === 'abort' ? 'RUN ENDED' : f.end === 'crushed' ? 'CRUSHED!' : 'TOO MUCH DAMAGE!';
     $('repRec').hidden = !isBest; $('repRec').textContent = 'NEW BEST RUN!';
     $('repStats').innerHTML = [['Height reached', fmtAlt(f.maxAlt)], ['Time survived', `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, '0')}`], ['Hits taken', f.hits], ['Things smashed', f.smashed]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
     const b = isBest ? records.infBest : prev;
@@ -3822,6 +3842,7 @@ window.__startGame = () => {
   // One "chunk" of sky course, picked by altitude, so the first few hundred meters already have stuff to do.
   // 0 = brand-new junk rocket (calm practice sky), 1 = well upgraded (full obstacle course)
   const skyIntensity = () => clamp((rocketLv() - 2) / 12, 0, 1);
+  const cashBagValue = () => 10 + rocketLv() * 12; // bags get fatter as your rocket gets better
   const addKite = (add, y) => { const ox = 100 + Math.random() * (VW - 200); add({ kind: 'kite', x: ox, ox, orr: 50 + Math.random() * 70, osc: 0.7 + Math.random() * 0.6, y, r: 16, vx: 1, c: ['#ff5a5f', '#58c4ff', '#3ee6b0', '#c77dff'][Math.floor(Math.random() * 4)] }); };
   const addPaper = (add, y) => { const dir = Math.random() < 0.5 ? 1 : -1; add({ kind: 'paper', x: dir > 0 ? -30 : VW + 30, y: y + Math.random() * 140, r: 13, vx: dir * (140 + Math.random() * 70) }); };
   function spawnPattern(f, alt, y, hitR = 20) {
@@ -4094,8 +4115,8 @@ window.__startGame = () => {
       f.pick.forEach(k => {
         if (k.used) return;
         if (k.kind === 'cash' && pts.some(q => Math.hypot(k.x + Math.sin(k.p * 2) * 14 - q.x, k.y - q.y) < 22 + hitR)) {
-          k.used = true; f.cashGot += 10; Sound.gold(); burst(k.x, k.y, ['#6fd66f', '#eaffea', '#ffcf33'], 14, 5);
-          floats.push({ text: '+$10', x: clamp(k.x, 80, VW - 80), y: k.y - 30, life: 0.9, max: 0.9, color: '#6fd66f' });
+          const v = cashBagValue(); k.used = true; f.cashGot += v; Sound.gold(); burst(k.x, k.y, ['#6fd66f', '#eaffea', '#ffcf33'], 14, 5);
+          floats.push({ text: '+$' + v.toLocaleString(), x: clamp(k.x, 80, VW - 80), y: k.y - 30, life: 0.9, max: 0.9, color: '#6fd66f' });
         }
         if (k.kind === 'star' && pts.some(q => Math.hypot(k.x - q.x, k.y - q.y) < 16 + hitR)) {
           k.used = true; f.stars++; Sound.block();
@@ -4241,7 +4262,6 @@ window.__startGame = () => {
       if (g.warn > 0) continue;
       if (pts.some(q => Math.hypot(g.x - q.x, g.y - q.y) < g.r * 0.82 + hitR * 0.7)) {
         if (f.fx.shield > 0) { f.fx.shield = 0; burst(pts[1].x, pts[1].y, ['#3ee6b0', '#c9fff0', '#fff3dc'], 34, 8); } // giants pop the bubble like it's nothing
-        if (f.infinite) { g.dead = true; takeHit(f, 0.1); burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#ff5a5f'], 40, 9); Sound.hit(); shakeT = 0.6; continue; }
         shout('SQUASHED!', pts[1].x, pts[1].y - 60, '#ff5a5f', 1.6); endFlight('crushed'); return;
       }
       if (!g.passed && g.y - g.r > pts[0].y) {
@@ -4930,7 +4950,7 @@ window.__startGame = () => {
     stars: [
       { html: '<div class="tut-big"><i class="gcoin"></i></div>', title: 'You found a Rainbow Star!', text: 'Rainbow stars are a special currency. Your stars now show up next to your cash.' },
       { html: '<div class="tut-big">1-3 <i class="gcoin"></i></div>', title: 'Rainbow Star Challenges', text: 'A new set of challenges just unlocked in the Challenges menu. Each one pays 1 to 3 rainbow stars, depending on how hard it is.' },
-      { html: '<div class="tut-big">?</div>', title: 'The Mystery Box', text: 'Save up 5 stars and $20,000, then roll the Mystery Box for a random cosmetic. Some are rare and golden ones are super rare. Wear them from your Inventory.' }
+      { html: '<div class="tut-big">?</div>', title: 'The Mystery Box', text: 'Roll the Mystery Box for 5 stars or $20,000 to win a random cosmetic. Some are rare and golden ones are super rare. Wear them from your Inventory.' }
     ],
     station: [
       { pic: { asset: 'station', lv: 1 }, title: 'Your base is open!', text: 'This is your launch station. Teddy is in charge for now.' },
