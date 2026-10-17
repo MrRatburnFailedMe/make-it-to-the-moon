@@ -2757,7 +2757,7 @@ window.__startGame = () => {
   const HOOD = (() => {
     let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
     const out = [];
-    for (let x = -1300; x < 2600;) {
+    for (let x = -14000; x < 15000;) {
       const kind = rnd() < 0.45 ? 'house' : rnd() < 0.5 ? 'pine' : 'round';
       if (kind === 'house') {
         const w = 60 + rnd() * 40, h = 38 + rnd() * 26;
@@ -2771,7 +2771,7 @@ window.__startGame = () => {
   function drawNeighborhood(t) {
     const g = GROUND - 34; // sits up on the hill behind the fence
     for (const o of HOOD) {
-      if (o.x < -VW + 20 || o.x + (o.w || 30) > VW * 2 - 20) continue; // stay on the ground strip
+      if (o.x < -VW * 8 + 20 || o.x + (o.w || 30) > VW * 9 - 20) continue; // stay on the ground strip
       if (o.kind === 'house') {
         const { x, w, h } = o;
         if (o.chimney) { ctx.fillStyle = '#3a2d52'; ctx.fillRect(x + w * 0.65, g - h - 30, 10, 24); }
@@ -2800,57 +2800,20 @@ window.__startGame = () => {
       }
     }
   }
-  let ambient = [], ambT = 0;
-  // scroll: how fast the world is sliding down the screen (0 on the launch pad)
-  function updateAmbient(dt, scroll, spawning) {
-    ambT -= dt;
-    if (spawning && ambT <= 0 && ambient.length < (scroll > 0 ? 14 : 7)) {
-      ambT = scroll > 0 ? 0.45 + Math.random() * 0.6 : 1.4 + Math.random() * 1.6;
-      const r = Math.random(), kind = r < 0.55 ? 'balloon' : r < 0.85 ? 'lantern' : 'plane';
-      const fromTop = scroll > 40;
-      const o = { kind, x: 30 + Math.random() * (VW - 60), y: fromTop ? -yOff - 30 : GROUND - 20, p: Math.random() * 6,
-        rise: kind === 'plane' ? -6 : -(18 + Math.random() * 22), par: 0.5 + Math.random() * 0.25, vx: kind === 'plane' ? (Math.random() < 0.5 ? -1 : 1) * (45 + Math.random() * 35) : 0,
-        c: ['#ff5a5f', '#ffcf33', '#3ee6b0', '#58c4ff', '#c77dff', '#ff9ae8'][Math.floor(Math.random() * 6)], s: 0.8 + Math.random() * 0.5 };
-      if (kind === 'plane') { o.x = o.vx > 0 ? -20 : VW + 20; o.y = fromTop ? -yOff + 40 + Math.random() * 200 : 160 + Math.random() * 200; }
-      ambient.push(o);
-    }
-    ambient.forEach(o => { o.p += dt; o.x += (o.vx + Math.sin(o.p * 0.9) * 8) * dt; o.y += (o.rise + scroll * o.par) * dt; });
-    ambient = ambient.filter(o => o.y > -yOff - 80 && o.y < BASE + 80 && o.x > -60 && o.x < VW + 60);
-  }
-  function drawAmbient(t) {
-    for (const o of ambient) {
-      ctx.save(); ctx.translate(o.x, o.y); ctx.scale(o.s, o.s);
-      if (o.kind === 'balloon') {
-        ctx.strokeStyle = 'rgba(255,243,220,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, 9);
-        for (let i = 1; i <= 4; i++) ctx.lineTo(Math.sin(o.p * 3 + i) * 2.5, 9 + i * 6); ctx.stroke();
-        ctx.beginPath(); ctx.ellipse(0, 0, 7, 9, 0, 0, 7); ctx.fillStyle = o.c; ctx.fill(); strokeInk(1.5);
-        dot(-2.5, -3, 2, 'rgba(255,255,255,.6)');
-      } else if (o.kind === 'lantern') {
-        ctx.save(); ctx.shadowColor = '#ffb54a'; ctx.shadowBlur = 14; ctx.globalAlpha = 0.85 + Math.sin(o.p * 6) * 0.1;
-        ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(6, -8); ctx.lineTo(8, 8); ctx.lineTo(-8, 8); ctx.closePath(); ctx.fillStyle = '#ffb54a'; ctx.fill(); ctx.restore();
-        dot(0, 4, 2.5, '#fff3c4');
-      } else {
-        ctx.scale(o.vx > 0 ? 1 : -1, 1); ctx.rotate(Math.sin(o.p * 2) * 0.08);
-        ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-10, -6); ctx.lineTo(-6, 0); ctx.lineTo(-10, 6); ctx.closePath(); ctx.fillStyle = '#fff3dc'; ctx.fill(); strokeInk(1.5);
-        ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, 0); ctx.strokeStyle = 'rgba(11,8,32,.4)'; ctx.lineWidth = 1; ctx.stroke();
-      }
-      ctx.restore();
-    }
-  }
   function drawGroundBack(t, st, dt, motion) {
     [['#3a2366', 600, 26, 0.008], ['#24164a', 628, 16, 0.013]].forEach(([c, base, amp, f]) => {
-      ctx.beginPath(); ctx.moveTo(-VW, BASE + 2000);
-      for (let x = -VW; x <= VW * 2; x += 12) ctx.lineTo(x, base - Math.sin(x * f + 1.3) * amp - Math.sin(x * f * 2.7) * amp * 0.4);
-      ctx.lineTo(VW * 2, BASE + 2000); ctx.closePath(); ctx.fillStyle = c; ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-VW * 8, BASE + 2000);
+      for (let x = -VW * 8; x <= VW * 9; x += 16) ctx.lineTo(x, base - Math.sin(x * f + 1.3) * amp - Math.sin(x * f * 2.7) * amp * 0.4);
+      ctx.lineTo(VW * 9, BASE + 2000); ctx.closePath(); ctx.fillStyle = c; ctx.fill();
     });
     drawNeighborhood(t);
     if (st <= 2) { // backyard fence
       ctx.fillStyle = '#4a3326';
-      ctx.fillRect(-VW, GROUND - 30, VW * 3, 5); ctx.fillRect(-VW, GROUND - 14, VW * 3, 5);
-      for (let x = -VW + 4; x < VW * 2; x += 18) { ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, GROUND - 38); ctx.lineTo(x + 6, GROUND - 44); ctx.lineTo(x + 12, GROUND - 38); ctx.lineTo(x + 12, GROUND); ctx.closePath(); ctx.fill(); }
+      ctx.fillRect(-VW * 8, GROUND - 30, VW * 17, 5); ctx.fillRect(-VW * 8, GROUND - 14, VW * 17, 5);
+      for (let x = -VW * 8 + 4; x < VW * 9; x += 18) { ctx.beginPath(); ctx.moveTo(x, GROUND); ctx.lineTo(x, GROUND - 38); ctx.lineTo(x + 6, GROUND - 44); ctx.lineTo(x + 12, GROUND - 38); ctx.lineTo(x + 12, GROUND); ctx.closePath(); ctx.fill(); }
     }
-    ctx.fillStyle = st <= 2 ? '#1d3b2c' : '#231a42'; ctx.fillRect(-VW, GROUND, VW * 3, 2000);
-    if (st <= 2) { ctx.strokeStyle = '#2e5a40'; ctx.lineWidth = 2; for (let x = -VW + 10; x < VW * 2; x += 37) { ctx.beginPath(); ctx.moveTo(x, GROUND + 14); ctx.lineTo(x - 3, GROUND + 6); ctx.moveTo(x, GROUND + 14); ctx.lineTo(x + 4, GROUND + 5); ctx.stroke(); } }
+    ctx.fillStyle = st <= 2 ? '#1d3b2c' : '#231a42'; ctx.fillRect(-VW * 8, GROUND, VW * 17, 2000);
+    if (st <= 2) { ctx.strokeStyle = '#2e5a40'; ctx.lineWidth = 2; for (let x = -VW * 8 + 10; x < VW * 9; x += 37) { ctx.beginPath(); ctx.moveTo(x, GROUND + 14); ctx.lineTo(x - 3, GROUND + 6); ctx.moveTo(x, GROUND + 14); ctx.lineTo(x + 4, GROUND + 5); ctx.stroke(); } }
     if (st === 5) drawSearchlights(t);
     if (st >= 4) drawTower(t, st);
     const dl = dishActive(state);
@@ -3758,11 +3721,6 @@ window.__startGame = () => {
       drawGroundBack(t, st, dt, motion); drawTramp(rx(), base, s.pad, t, 'back'); ctx.restore(); ctx.globalAlpha = 1;
     }
     if (alt < 9000) drawClouds(w2s, ppm);
-    { // balloons, lanterns and paper planes keep the low sky lively; they fade out on the way to space
-      const scroll = f.phase === 'done' ? 0 : clamp(Math.max(0, f.vy) * 0.5 * clamp(ppm, 0.25, 1), 0, 320);
-      updateAmbient(dt, scroll, alt < 3000 && !f.infinite);
-      ctx.save(); ctx.globalAlpha = 1 - smooth((alt - 2500) / 2000); drawAmbient(t); ctx.restore();
-    }
     const mc = w2s(P.MX, P.MY);
     const moonVisible = f.infinite ? true : drawFlightMoon(mc, P.RM * ppm, f);
     f.moonScr = { x: mc.x, y: mc.y, r: P.RM * ppm };
@@ -3834,11 +3792,14 @@ window.__startGame = () => {
   // Things in the sky before space: birds low down, hot-air balloons in the middle, planes higher up.
   const HIT = {
     rock: { dmg: 0.2, slow: 0.65, text: 'CRUNCH!' }, comet: { dmg: 0.25, slow: 0.6, text: 'FWOOSH!' }, ufo: { dmg: 0.2, slow: 0.7, text: 'ZAP!' }, sat: { dmg: 0.15, slow: 0.75, text: 'BONK!' }, debris: { dmg: 0.15, slow: 0.75, text: 'CLONK!' }, drone: { dmg: 0.12, slow: 0.8, text: 'BZZT!' }, bird: { dmg: 0.1, slow: 0.85, text: 'SQUAWK!' },
-    balloon: { dmg: 0.15, slow: 0.75, text: 'POP!' }, plane: { dmg: 0.25, slow: 0.6, text: 'WHAM!' }
+    balloon: { dmg: 0.15, slow: 0.75, text: 'POP!' }, plane: { dmg: 0.25, slow: 0.6, text: 'WHAM!' },
+    kite: { dmg: 0.1, slow: 0.85, text: 'SNAG!' }, paper: { dmg: 0.06, slow: 0.9, text: 'SWISH!' }
   };
   // One "chunk" of sky course, picked by altitude, so the first few hundred meters already have stuff to do.
   // 0 = brand-new junk rocket (calm practice sky), 1 = well upgraded (full obstacle course)
   const skyIntensity = () => clamp((rocketLv() - 2) / 12, 0, 1);
+  const addKite = (add, y) => { const ox = 100 + Math.random() * (VW - 200); add({ kind: 'kite', x: ox, ox, orr: 50 + Math.random() * 70, osc: 0.7 + Math.random() * 0.6, y, r: 16, vx: 1, c: ['#ff5a5f', '#58c4ff', '#3ee6b0', '#c77dff'][Math.floor(Math.random() * 4)] }); };
+  const addPaper = (add, y) => { const dir = Math.random() < 0.5 ? 1 : -1; add({ kind: 'paper', x: dir > 0 ? -30 : VW + 30, y: y + Math.random() * 140, r: 13, vx: dir * (140 + Math.random() * 70) }); };
   function spawnPattern(f, alt, y, hitR = 20) {
     let r = Math.random(); const lowAlt = alt < 1500;
     if (f.lastWall && r >= 0.24 && r < 0.48) r = 0.5 + Math.random() * 0.5; // never two walls in a row
@@ -3849,11 +3810,13 @@ window.__startGame = () => {
     if (skyIntensity() < 0.35) {
       f.lastWall = false;
       const q = Math.random();
-      if (q < 0.36) { const x0 = 100 + Math.random() * (VW - 200), n = 4 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) star(clamp(x0 + Math.sin(i * 0.8) * 70, 40, VW - 40), y - i * 50); }
-      else if (q < 0.56) f.pick.push({ kind: 'ring', x: 100 + Math.random() * (VW - 200), y, w: 92, p: 0 });
-      else if (q < 0.7) f.pick.push({ kind: 'cash', x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
-      else if (q < 0.76 && (records.day || 1) >= 2) f.boxes.push({ x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
-      else if (q < 0.94) { const b = makeAirThing(Math.min(alt, 1000)); b.vx *= 0.7; f.ast.push(b); }
+      if (q < 0.22) { const x0 = 100 + Math.random() * (VW - 200), n = 4 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) star(clamp(x0 + Math.sin(i * 0.8) * 70, 40, VW - 40), y - i * 50); }
+      else if (q < 0.32) f.pick.push({ kind: 'ring', x: 100 + Math.random() * (VW - 200), y, w: 92, p: 0 });
+      else if (q < 0.4) f.pick.push({ kind: 'cash', x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
+      else if (q < 0.44 && (records.day || 1) >= 2) f.boxes.push({ x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
+      else if (q < 0.6) { const b = makeAirThing(Math.min(alt, 1000)); b.vx *= 0.8; f.ast.push(b); }
+      else if (q < 0.74) addKite(add, y);
+      else if (q < 0.88) addPaper(add, y);
       else { const ox = 140 + Math.random() * (VW - 280); add({ kind: 'drone', x: ox, ox, orr: 70, osc: 1, y, r: 14, vx: 1 }); }
       return;
     }
@@ -3878,6 +3841,7 @@ window.__startGame = () => {
     } else { // classic crossers
       f.ast.push(makeAirThing(alt));
       if (Math.random() < 0.5 * skyIntensity()) f.ast.push(makeAirThing(alt)); // two at once, more often later
+      if (alt < 2500 && Math.random() < 0.45) (Math.random() < 0.5 ? addKite : addPaper)(add, y - 120);
       if (Math.random() < 0.25) star(80 + Math.random() * (VW - 160), y);
       if (alt < 4000 && Math.random() < 0.2) f.pick.push({ kind: 'cash', x: 90 + Math.random() * (VW - 180), y: y - 80, p: Math.random() * 6 });
     }
@@ -3964,6 +3928,19 @@ window.__startGame = () => {
       box(-9, -5, 18, 10, '#3a3656', 3, 2.5);
       blinkLight(0, 6, t, '#ff5a5f', 6);
       dot(-3, -1, 1.5, '#58c4ff'); dot(3, -1, 1.5, '#58c4ff');
+    } else if (a.kind === 'kite') {
+      // tail of bows flapping below
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(0, 18);
+      for (let i = 1; i <= 5; i++) ctx.lineTo(Math.sin(a.p * 5 + i) * 6, 18 + i * 9); ctx.stroke();
+      for (let i = 2; i <= 5; i += 2) { const bx = Math.sin(a.p * 5 + i) * 6, by = 18 + i * 9; ctx.beginPath(); ctx.moveTo(bx - 5, by - 3); ctx.lineTo(bx + 5, by + 3); ctx.lineTo(bx + 5, by - 3); ctx.lineTo(bx - 5, by + 3); ctx.closePath(); ctx.fillStyle = '#ffcf33'; ctx.fill(); }
+      ctx.rotate(Math.sin(a.p * 2) * 0.15);
+      ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(14, -2); ctx.lineTo(0, 18); ctx.lineTo(-14, -2); ctx.closePath(); ctx.fillStyle = a.c || '#ff5a5f'; ctx.fill(); strokeInk(2.5);
+      ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, 18); ctx.moveTo(-14, -2); ctx.lineTo(14, -2); ctx.strokeStyle = 'rgba(11,8,32,.5)'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-14, -2); ctx.lineTo(0, -20); ctx.lineTo(0, -2); ctx.closePath(); ctx.fillStyle = 'rgba(255,255,255,.25)'; ctx.fill();
+    } else if (a.kind === 'paper') {
+      ctx.scale(dir * 1.6, 1.6); ctx.rotate(Math.sin(a.p * 3) * 0.08);
+      ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-10, -6); ctx.lineTo(-6, 0); ctx.lineTo(-10, 6); ctx.closePath(); ctx.fillStyle = '#fff3dc'; ctx.fill(); strokeInk(1.8);
+      ctx.beginPath(); ctx.moveTo(12, 0); ctx.lineTo(-6, 0); ctx.strokeStyle = 'rgba(11,8,32,.45)'; ctx.lineWidth = 1; ctx.stroke();
     } else { // plane
       ctx.scale(dir, 1);
       ctx.beginPath(); ctx.moveTo(-26, -2); ctx.lineTo(-30, -16); ctx.lineTo(-20, -16); ctx.lineTo(-12, -4); ctx.closePath(); ctx.fillStyle = '#ff5a5f'; ctx.fill(); strokeInk(2.5);
@@ -4020,6 +3997,7 @@ window.__startGame = () => {
   // Things break in funny ways: birds burst into feathers, planes rip in half, balloons pop and drop their basket.
   function breakThing(a, col, quiet) {
     if (flight) flight.broke[a.kind || 'rock'] = (flight.broke[a.kind || 'rock'] || 0) + 1;
+    if (a.kind === 'kite' || a.kind === 'paper') { burst(a.x, a.y, a.kind === 'kite' ? [a.c || '#ff5a5f', '#ffcf33', '#fff3dc'] : ['#fff3dc', '#c9d2e6'], 14, 5); return; }
     if (!a.kind) { rockBoom(a, col); return; }
     if (a.kind === 'comet' || a.kind === 'ufo' || a.kind === 'sat') {
       const cols = { comet: ['#ffcf33', '#ff9a3c', '#fff3dc'], ufo: ['#3ee6b0', '#c9d2e6', '#7ee06a'], sat: ['#ffcf33', '#3e7bff', '#c9d2e6'] }[a.kind];
@@ -4084,7 +4062,7 @@ window.__startGame = () => {
     const altNow = altOf(f.x, f.y);
     if (active && f.left && altNow > 15 && altNow < P.SPACE * 0.9 && f.vy > 5) {
       f.spawnC -= dt;
-      if (f.spawnC <= 0) { const inten = skyIntensity(); f.spawnC = (3.0 - 1.85 * inten) + Math.random() * (0.9 - 0.3 * inten); spawnPattern(f, altNow, Math.max(-yOff - 40, pts[2].y - 380), hitR); }
+      if (f.spawnC <= 0) { const inten = skyIntensity(); f.spawnC = (inten < 0.35 ? 2.1 : 3.0 - 1.85 * inten) + Math.random() * (0.9 - 0.3 * inten); spawnPattern(f, altNow, Math.max(-yOff - 40, pts[2].y - 380), hitR); }
     }
     if (f.phase !== 'done') f.pick.forEach(k => { k.y += flow * dt; k.p += dt; });
     if (active && !f.hide) {
@@ -4638,7 +4616,6 @@ window.__startGame = () => {
     drawSkyBg(t, 0);
     drawDecoMoon(1);
     drawSatellites(t, st);
-    updateAmbient(dt, 0, true); drawAmbient(t);
     drawGroundBack(t, st, dt, motion);
     drawTramp(rx(), base, s.pad, t, 'back');
 
