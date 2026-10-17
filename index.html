@@ -14,7 +14,7 @@
 <title>Make It to the Moon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Baloo+2:wght@500;700;800&family=Chakra+Petch:wght@600;700&family=Orbitron:wght@600;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Baloo+2:wght@500;700;800&family=Chakra+Petch:wght@600;700&display=swap">
 <style>
 /* Layout: backyard launch scene on the left (sticky), comic-style upgrade bay on the right; stacks on phones. Single committed night-launch look. */
 :root {
@@ -302,7 +302,8 @@ body:not(.mode-menu) .menu { display: none; }
 .mbtn:hover { transform: translateY(-2px) rotate(-1deg); }
 .mbtn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--ink); }
 .mbtn:focus-visible, .slot:focus-visible, .tog:focus-visible, .seg button:focus-visible, .ghost:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
-#mNew { border-color: #ff9ae8 !important; box-shadow: 0 0 18px rgba(255,154,232,.45), inset 0 0 18px rgba(199,125,255,.25) !important; }
+#mNew { background: var(--hot); color: var(--cream); }
+#mSettings { background: var(--sky); }
 .mbtn.locked { background: #3a3656; color: var(--muted); cursor: not-allowed; }
 .mbtn.locked:hover { transform: none; }
 .mbtn small { display: block; font-family: var(--f-body); font-size: 14px; font-weight: 800; }
@@ -526,20 +527,6 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
 .tut-big { font: 400 64px/1 var(--f-display); color: var(--sun); text-align: center; padding: 10px 0; }
 .tut-big i.gcoin { width: 64px !important; height: 64px !important; vertical-align: -8px; }
 .tut-bar { width: min(260px, 80%); margin: 14px auto; font-weight: 800; color: var(--muted); }
-
-/* front screen: space-age lettering */
-.menu { --f-space: 'Orbitron', 'Chakra Petch', system-ui, sans-serif; }
-.menu .logo.big { font-family: var(--f-space); font-weight: 900; text-transform: uppercase; letter-spacing: 2px; line-height: 1.1; font-size: clamp(28px, 5.4vw, 54px); text-align: center;
-  color: #e9f6ff; text-shadow: 0 0 6px #7fe9ff, 0 0 18px rgba(88,196,255,.8), 0 0 42px rgba(199,125,255,.6), 0 4px 0 var(--ink); }
-.menu .logo.big span { display: block; color: #ffd6ff; text-shadow: 0 0 6px #ff9ae8, 0 0 20px rgba(199,125,255,.9), 0 0 44px rgba(255,90,168,.6), 0 4px 0 var(--ink); }
-.menu .menu-tag { font-family: var(--f-space); font-weight: 600; font-size: 12px; letter-spacing: 3px; text-transform: uppercase; text-align: center; color: #7fe9ff; text-shadow: 0 0 10px rgba(127,233,255,.7); margin: 4px 0 14px; }
-.menu .mbtn { font-family: var(--f-space); font-weight: 800; font-size: 20px; letter-spacing: 3px; text-transform: uppercase; color: #e9f6ff;
-  background: linear-gradient(180deg, rgba(40,30,90,.85), rgba(15,10,40,.9)); border: 2px solid rgba(127,233,255,.7); border-radius: 14px;
-  box-shadow: 0 0 14px rgba(88,196,255,.35), inset 0 0 18px rgba(199,125,255,.18); text-shadow: 0 0 10px rgba(127,233,255,.8); backdrop-filter: blur(3px); }
-.menu .mbtn:hover { transform: translateY(-2px); border-color: #ff9ae8; color: #fff; box-shadow: 0 0 22px rgba(255,154,232,.55), inset 0 0 22px rgba(199,125,255,.3); text-shadow: 0 0 12px #ff9ae8; }
-.menu .mbtn:active { transform: translateY(1px); box-shadow: 0 0 10px rgba(88,196,255,.35); }
-.menu .menu-panel h2 { font-family: var(--f-space); font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #e9f6ff; text-shadow: 0 0 12px rgba(127,233,255,.7); }
-.menu .menu-panel h3 { font-family: var(--f-space); letter-spacing: 2px; text-transform: uppercase; }
 
 @media (prefers-reduced-motion: reduce) {
   .card.bump { animation: none; }
