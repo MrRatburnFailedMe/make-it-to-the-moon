@@ -958,19 +958,19 @@ window.__startGame = () => {
     const N = m => 440 * Math.pow(2, (m - 69) / 12);
     // Each song: chords per bar (8 eighth notes), a melody as [midi note or 0 for a rest, length in eighths],
     // and how the band plays it. Brass is two slightly detuned saws through an opening filter, like a trumpet section.
+    // div = steps per beat (2 = eighths, 4 = sixteenths). Melodies are [midi or 0 for rest, length in steps].
     const SONGS = {
-      title: { bpm: 84, chords: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62], [60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]],
+      title: { bpm: 84, div: 2, chords: [[60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62], [60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62]],
         mel: [[67, 2], [72, 2], [76, 3], [74, 1], [72, 2], [69, 2], [76, 4], [77, 2], [76, 2], [74, 2], [72, 2], [74, 6], [0, 2],
-          [76, 2], [79, 2], [76, 3], [74, 1], [72, 4], [69, 4], [77, 2], [81, 2], [79, 2], [77, 2], [79, 8]], bass: 'long', strings: true, drums: 0, bright: 2300, vol: 0.06 },
-      shop: { bpm: 112, chords: [[53, 57, 60], [58, 62, 65], [60, 64, 67], [53, 57, 60], [53, 57, 60], [50, 53, 57], [55, 58, 62], [60, 64, 67]],
-        mel: [[69, 1], [72, 1], [77, 1], [0, 1], [69, 1], [72, 1], [77, 2], [74, 1], [77, 1], [82, 2], [81, 1], [79, 1], [77, 2],
-          [76, 1], [79, 1], [84, 2], [82, 1], [81, 1], [79, 2], [77, 2], [72, 2], [77, 4], [81, 1], [79, 1], [77, 1], [74, 1], [77, 2], [81, 2],
-          [74, 2], [77, 2], [81, 4], [79, 1], [77, 1], [76, 1], [74, 1], [72, 2], [76, 2], [77, 6], [0, 2]], bass: 'oompah', strings: false, drums: 1, bright: 2600, vol: 0.05, stacc: true },
-      pad: { bpm: 80, chords: [[62, 66, 69], [59, 62, 66], [55, 59, 62], [57, 61, 64]],
-        mel: [[66, 4], [69, 4], [71, 4], [69, 4], [67, 4], [71, 2], [74, 2], [73, 6], [0, 2]], bass: 'long', strings: true, drums: 0, bright: 1500, vol: 0.05 },
-      flight: { bpm: 126, chords: [[60, 64, 67], [53, 57, 60], [55, 59, 62], [60, 64, 67], [57, 60, 64], [53, 57, 60], [55, 59, 62], [55, 59, 62]],
-        mel: [[67, 1], [67, 1], [72, 2], [76, 2], [79, 2], [77, 2], [81, 2], [77, 2], [72, 2], [74, 1], [76, 1], [77, 2], [79, 2], [71, 2], [72, 6], [67, 1], [67, 1],
-          [69, 2], [72, 2], [76, 2], [81, 2], [81, 2], [79, 1], [77, 1], [77, 2], [72, 2], [74, 2], [79, 2], [77, 2], [74, 2], [79, 4], [77, 2], [74, 2]], bass: 'march', strings: false, drums: 2, bright: 2800, vol: 0.06 }
+          [76, 2], [79, 2], [76, 3], [74, 1], [72, 4], [69, 4], [77, 2], [81, 2], [79, 2], [77, 2], [79, 8]], bass: 'long', strings: true, bright: 2300, vol: 0.06 },
+      // the garage: a punchy hardware-store groove with brass hits, funky bass and handclaps
+      garage: { bpm: 128, div: 2, chords: [[58, 62, 65], [63, 67, 70], [65, 69, 72], [58, 62, 65], [55, 58, 62], [63, 67, 70], [65, 69, 72], [65, 69, 72]],
+        mel: [[70, 1], [70, 1], [0, 1], [74, 1], [0, 1], [72, 1], [70, 2], [67, 1], [70, 1], [0, 1], [75, 2], [74, 1], [72, 2],
+          [72, 1], [72, 1], [0, 1], [77, 1], [0, 1], [75, 1], [74, 2], [70, 4], [0, 2], [65, 1], [67, 1],
+          [70, 1], [70, 1], [0, 1], [74, 1], [0, 1], [72, 1], [70, 2], [79, 2], [77, 1], [75, 1], [74, 2], [72, 2],
+          [72, 1], [74, 1], [75, 1], [77, 1], [0, 1], [77, 1], [79, 2], [81, 4], [0, 4]], bass: 'funk', drums: 'funk', bright: 2900, vol: 0.055, stacc: true },
+      // flying: four-on-the-floor space techno with a rolling bass and a filtered arpeggio
+      flight: { bpm: 128, div: 4, chords: [[57, 60, 64], [53, 57, 60], [60, 64, 67], [55, 59, 62]], techno: true }
     };
     let musGain = null, echo = null, song = null, want = null, nextT = 0, step = 0, timer = 0, melAt = {};
     const musicOn = () => settings.music !== false && settings.volume > 0 && !cgMuted() && !document.hidden;
@@ -1011,27 +1011,58 @@ window.__startGame = () => {
       const v = kind === 'snare' ? 0.13 : 0.03, d = kind === 'snare' ? 0.14 : 0.04;
       g.gain.setValueAtTime(v, at); g.gain.exponentialRampToValueAtTime(0.001, at + d); s.connect(f); f.connect(g); g.connect(musGain); s.start(at); s.stop(at + d + 0.02);
     }
-    function buildMelody(S) { const map = {}; let pos = 0; S.mel.forEach(([m, len]) => { if (m) map[pos] = [m, len]; pos += len; }); return { map, len: pos }; }
+    function pluck(freq, at, dur, vol, cutoff, type = 'square') {
+      const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = type; o.frequency.value = freq; f.type = 'lowpass'; f.Q.value = 6;
+      f.frequency.setValueAtTime(cutoff, at); f.frequency.exponentialRampToValueAtTime(Math.max(200, cutoff * 0.25), at + dur);
+      g.gain.setValueAtTime(vol, at); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(f); f.connect(g); g.connect(musGain); o.start(at); o.stop(at + dur + 0.05);
+    }
+    function clap(at, vol = 0.12) {
+      [0, 0.012, 0.024].forEach(d => { const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+        s.buffer = noiseBuf; f.type = 'bandpass'; f.frequency.value = 1300; f.Q.value = 1.5;
+        g.gain.setValueAtTime(vol, at + d); g.gain.exponentialRampToValueAtTime(0.001, at + d + 0.09); s.connect(f); f.connect(g); g.connect(musGain); s.start(at + d); s.stop(at + d + 0.1); });
+    }
+    function openHat(at) {
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      s.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 8000; g.gain.setValueAtTime(0.05, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.16);
+      s.connect(f); f.connect(g); g.connect(musGain); s.start(at); s.stop(at + 0.18);
+    }
+    function buildMelody(S) { const map = {}; let pos = 0; (S.mel || []).forEach(([m, len]) => { if (m) map[pos] = [m, len]; pos += len; }); return { map, len: pos }; }
     function tick() {
       if (!ac || !song || !musicOn()) { if (ac) nextT = ac.currentTime + 0.1; return; }
-      const S = SONGS[song], spb = 60 / S.bpm / 2, M = melAt[song] || (melAt[song] = buildMelody(S));
-      const loop = Math.max(S.chords.length * 8, M.len);
+      const S = SONGS[song], div = S.div || 2, bar = div * 4, sp = 60 / S.bpm / div, M = melAt[song] || (melAt[song] = buildMelody(S));
+      const loop = Math.max(S.chords.length * bar, M.len);
       while (nextT < ac.currentTime + 0.3) {
-        const s = step % loop, ch = S.chords[Math.floor(s / 8) % S.chords.length], i = s % 8, mel = M.map[s];
-        if (mel) brass(N(mel[0]), nextT, mel[1] * spb * (S.stacc && mel[1] === 1 ? 0.55 : 0.9), S.vol, S.bright);
-        if (S.bass === 'long' && i === 0) low(N(ch[0] - 24), nextT, spb * 7.5, 0.11);
-        if (S.bass === 'oompah') { if (i % 4 === 0) low(N((i === 4 ? ch[2] - 12 : ch[0]) - 12), nextT, spb * 0.9, 0.12); if (i % 4 === 2) ch.forEach(m => brass(N(m), nextT, spb * 0.5, S.vol * 0.28, 1400)); }
-        if (S.bass === 'march' && i % 2 === 0) low(N((i % 4 === 0 ? ch[0] : ch[2] - 12) - 12), nextT, spb * 0.9, 0.11);
-        if (S.strings && i === 0) strings(ch, nextT, spb * 8);
-        if (S.drums) { if (i % 4 === 0) drum('kick', nextT); if (i % 4 === 2) drum('snare', nextT); if (S.drums > 1 || i % 2) drum('hat', nextT); }
-        nextT += spb; step++;
+        const s = step % loop, ch = S.chords[Math.floor(s / bar) % S.chords.length], i = s % bar, beat = i % div === 0;
+        if (S.techno) {
+          // kick on every beat, clap on 2 and 4, open hat on the off-beat, ticking 16th hats
+          if (beat) drum('kick', nextT);
+          if (i === 4 || i === 12) clap(nextT, 0.09);
+          if (i % 4 === 2) openHat(nextT); else drum('hat', nextT);
+          // rolling bass between the kicks
+          if (i % 4 !== 0) pluck(N(ch[0] - 24), nextT, sp * 0.9, 0.16, 420 + (i % 4) * 120, 'sawtooth');
+          // filtered arpeggio that slowly opens and closes over 8 bars
+          const sweep = 700 + 2200 * (0.5 + 0.5 * Math.sin(step / (bar * 8) * Math.PI * 2));
+          const arp = [0, 1, 2, 1, 2, 0, 3, 2][i % 8], m = arp === 3 ? ch[0] + 12 : ch[arp];
+          pluck(N(m + 12), nextT, sp * 1.5, 0.05, sweep);
+          if (i === 0 && step % (bar * 2) === 0) strings(ch, nextT, sp * bar * 2);
+        } else {
+          const mel = M.map[s];
+          if (mel) brass(N(mel[0]), nextT, mel[1] * sp * (S.stacc && mel[1] === 1 ? 0.5 : 0.9), S.vol, S.bright);
+          if (S.bass === 'long' && i === 0) low(N(ch[0] - 24), nextT, sp * 7.5, 0.11);
+          if (S.bass === 'funk' && [0, 2, 3, 5, 6].includes(i)) low(N(ch[0] - (i === 3 || i === 6 ? 12 : 24)), nextT, sp * 0.8, 0.13);
+          if (S.strings && i === 0) strings(ch, nextT, sp * 8);
+          if (S.drums === 'funk') { if (i === 0 || i === 3 || i === 4) drum('kick', nextT); if (i === 2 || i === 6) clap(nextT); drum('hat', nextT); }
+        }
+        nextT += sp; step++;
       }
     }
     function playMusic(name) {
       if (name) want = name;
       if (!ac || !want) return; // waits for the first click or key press (browsers block sound before that)
       ensure(); musOut();
-      if (song !== want) { song = want; step = 0; nextT = ac.currentTime + 0.15; echo.delayTime.value = 60 / SONGS[song].bpm * 0.5; }
+      if (song !== want) { song = want; step = 0; nextT = ac.currentTime + 0.15; echo.delayTime.value = 60 / SONGS[song].bpm * 0.75; }
       musGain.gain.setTargetAtTime(musicOn() ? 0.55 : 0, ac.currentTime, 0.25);
       if (!timer) timer = setInterval(tick, 60);
     }
@@ -1102,7 +1133,7 @@ window.__startGame = () => {
       if (f > 0) { acc += st.accel; f -= P.BURN * dt; }
       v += acc * dt; y += v * dt; t += dt;
       if (y < 0) { y = 0; v = Math.max(v, 0); }
-      if (f <= 0) { te += dt; ymax = Math.max(ymax, y); if (te >= BOOM_AT) return ymax; }
+      if (f <= 0) return y + Math.max(0, v) / 1.2; // no coasting: the ship stalls right after the tank runs dry
     }
     return y;
   }
@@ -1341,7 +1372,7 @@ window.__startGame = () => {
   let screen = 'menu';
   function showScreen(m) {
     screen = m;
-    Sound.playMusic(m === 'menu' || m === 'intro' ? 'title' : m === 'shop' || m === 'box' ? 'shop' : flight ? 'flight' : 'pad');
+    Sound.playMusic(m === 'menu' || m === 'intro' ? 'title' : flight ? 'flight' : 'garage');
     document.body.classList.toggle('mode-menu', m === 'menu');
     document.body.classList.toggle('mode-intro', m === 'intro');
     document.body.classList.toggle('mode-shop', m === 'shop');
@@ -3186,8 +3217,11 @@ window.__startGame = () => {
     f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.infinite) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
     if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
-    // coasting bleeds 100-200 m/s every second, so gliding never saves fuel
-    if (!f.burning && f.vy > 0 && f.left && (f.phase === 'ascent' || f.phase === 'space')) f.vy = Math.max(0, f.vy - clamp(100 + f.vy * 0.1, 100, 200) * dt);
+    // no coasting: let go of thrust and the ship stalls within a second or two, then drops fast
+    if (!f.burning && f.left && (f.phase === 'ascent' || f.phase === 'space')) {
+      if (f.vy > 0) f.vy = Math.max(0, f.vy - Math.max(300, f.vy * 1.2) * dt);
+      else f.vy -= 25 * dt;
+    }
     // sideways position is steered directly (see updateFlight); physics only moves the rocket up and down
     f.vx = 0; f.vy += ay * dt;
     f.y += f.vy * dt * (f.fx.speed > 0 ? 2 : 1);
@@ -3286,6 +3320,10 @@ window.__startGame = () => {
       f.left = true;
     }
     f.maxAlt = Math.max(f.maxAlt, alt);
+    if (f.left && !f.infinite && (f.phase === 'ascent' || f.phase === 'space') && f.maxAlt - alt > 20) {
+      if (f.fuel > 0) floats.push({ text: 'ERROR: SHIP STABILITY!', x: VW / 2, y: (BASE - yOff) / 2 - 110, life: 1.8, max: 1.8, color: '#ff5a5f' });
+      Sound.alarm(); endFlight(f.fuel <= 0 ? 'boom' : 'unstable'); return;
+    }
     f.maxSpd = Math.max(f.maxSpd, Math.hypot(f.vx, f.vy));
     if (!f.infinite && chalUnlocked()) { checkChallenges(f); if (starsUnlocked()) checkStarChallenges(f); }
     if (!f.reached && alt >= P.SPACE) {
@@ -3308,15 +3346,15 @@ window.__startGame = () => {
 
   function endFlight(kind) {
     cgGame(g => g.gameplayStop());
-    if (kind !== 'moon') Sound.playMusic('pad');
+    if (kind !== 'moon') Sound.playMusic('garage');
     const f = flight;
     f.phase = 'done'; f.end = kind; f.burning = false;
     keys.left = keys.right = keys.thrust = false;
     ui.ctls.hidden = ui.abort.hidden = true;
     const p = f.screen, cy = (BASE - yOff) / 2;
-    if (kind === 'crash' || kind === 'boom' || kind === 'crushed' || kind === 'wrecked') Sound.boom();
+    if (kind === 'crash' || kind === 'boom' || kind === 'crushed' || kind === 'wrecked' || kind === 'unstable') Sound.boom();
     const say = (text, color) => floats.push({ text, x: clamp(p.x, 160, VW - 160), y: clamp(p.y - 80, -yOff + 140, BASE - 120), life: 1.6, max: 1.6, color });
-    if (kind === 'crash' || kind === 'boom' || kind === 'crushed' || kind === 'wrecked') { f.hide = true; burst(p.x, p.y - 20, ['#ff7a1a', '#ffcf33', '#5d5a78', '#fff3dc', '#ff5a5f'], 60, 9); say('KABOOM!', '#ff7a1a'); shakeT = 0.6; splash(f, p.x, p.y - 30); }
+    if (kind === 'crash' || kind === 'boom' || kind === 'crushed' || kind === 'wrecked' || kind === 'unstable') { f.hide = true; burst(p.x, p.y - 20, ['#ff7a1a', '#ffcf33', '#5d5a78', '#fff3dc', '#ff5a5f'], 60, 9); say('KABOOM!', '#ff7a1a'); shakeT = 0.6; splash(f, p.x, p.y - 30); }
     if (kind === 'land') say('TOUCHDOWN!', '#3ee6b0');
     if (kind === 'lost') floats.push({ text: 'SIGNAL LOST!', x: VW / 2, y: cy, life: 1.6, max: 1.6, color: '#c77dff' });
     if (f.infinite) {
@@ -3388,7 +3426,7 @@ window.__startGame = () => {
     if (flight !== f) return;
     $('repDay').textContent = `DAY ${records.day} REPORT`;
     $('repBack').textContent = 'Go to the shop';
-    const title = f.end === 'moon' ? 'YOU LANDED ON THE MOON!' : f.end === 'crushed' ? 'CRUSHED IN DEEP SPACE!' : f.end === 'lost' ? 'OUT OF CONTROL!' : f.reached ? 'MADE IT TO SPACE!'
+    const title = f.end === 'moon' ? 'YOU LANDED ON THE MOON!' : f.end === 'crushed' ? 'CRUSHED IN DEEP SPACE!' : f.end === 'lost' ? 'OUT OF CONTROL!' : f.end === 'unstable' ? 'SHIP STABILITY ERROR!' : f.reached ? 'MADE IT TO SPACE!'
       : f.maxAlt < 100 ? 'IT HOPPED!' : f.maxAlt < 1000 ? 'OFF THE GROUND!' : 'TOUCHED THE CLOUDS!';
     $('repTitle').textContent = title;
     $('repRec').hidden = !isRecord;
@@ -3402,6 +3440,7 @@ window.__startGame = () => {
       crash: 'It came down hard. Your crew glued it back together overnight.',
       crushed: 'A giant asteroid flattened your rocket. Watch for the red warnings and get out of the way!',
       boom: 'It ran out of fuel, the engine failed, and it blew up. The crew is already rebuilding it for tomorrow.',
+      unstable: 'The engine stopped, the ship started falling, and it shook itself apart. Keep thrusting!',
       land: 'Clean landing. The pilot would like a snack.',
       moon: 'Touchdown! Your pilot planted a flag on the Moon. The whole crew is cheering.',
       lost: 'Your rocket flew off course and the crew lost track of it. They built you a new one for tomorrow.',
@@ -3994,17 +4033,6 @@ window.__startGame = () => {
       }
     }
     f.pick = f.pick.filter(k => k.y < BASE + 60 && !(k.used && (k.kind === 'star' || k.kind === 'cash')));
-    // fireworks go off as you pass the first few heights, and a blimp floats by down low
-    if (active && f.fw.length && altNow >= f.fw[0] && !f.infinite) {
-      f.fw.shift();
-      for (let i = 0; i < 3; i++) setTimeout(() => { if (flight !== f) return; const x = 80 + Math.random() * (VW - 160), y = -yOff + 120 + Math.random() * 200;
-        burst(x, y, [['#ff5a5f', '#ffcf33', '#fff3dc'], ['#58c4ff', '#c77dff', '#fff3dc'], ['#3ee6b0', '#ff9ae8', '#ffcf33']][i], fewFx() ? 18 : 40, 7); Sound.block(); }, i * 220);
-    }
-    if (active && !f.blimp && !f.blimpDone && altNow > 250 && altNow < 2500 && !f.infinite) {
-      f.blimpDone = true; const dir = Math.random() < 0.5 ? 1 : -1;
-      f.blimp = { x: dir > 0 ? -180 : VW + 180, y: -yOff + 140, vx: dir * 70, p: 0 };
-    }
-    if (f.blimp) { const b = f.blimp; b.p += dt; b.x += b.vx * dt; if (f.phase !== 'done') b.y += flow * 0.3 * dt; if (b.x < -260 || b.x > VW + 260 || b.y > BASE + 120) f.blimp = null; }
     if (inSpace && !f.infinite) {
       f.spawnA -= dt; f.spawnB -= dt;
       // sparse right after reaching space, thick near the Moon
@@ -4459,7 +4487,6 @@ window.__startGame = () => {
       });
       ctx.restore();
     });
-    if (f.blimp) drawBlimp(f.blimp, t);
     f.pick.forEach(k => { if (k.kind === 'star') drawStar(k.x, k.y + Math.sin(k.p * 4) * 3, Math.sin(k.p * 2) * 0.3); else if (k.kind === 'cash') { if (!k.used) drawCashBag(k.x + Math.sin(k.p * 2) * 14, k.y, Math.sin(k.p * 2) * 0.2); } else drawRing(k.x, k.y, k.w, k.p, k.used); });
     if (f.gold) {
       const g = f.gold, r = 22;
