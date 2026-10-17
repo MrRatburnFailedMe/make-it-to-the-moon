@@ -680,6 +680,7 @@ body.mode-box .boxscr { display: flex; flex-direction: column; gap: 14px; }
         <h3>Sound</h3>
         <div class="set-row"><span>Volume</span><input type="range" id="setVol" min="0" max="100" step="5" aria-label="Volume"></div>
         <div class="set-row"><span>Sound effects</span><button class="tog" type="button" id="setSfx" aria-label="Sound effects"></button></div>
+        <div class="set-row"><span>Music</span><button class="tog" type="button" id="setMusic" aria-label="Music"></button></div>
         <div class="set-row"><span>Engine rumble</span><button class="tog" type="button" id="setRumble" aria-label="Engine rumble"></button></div>
       </div>
       <div class="set-group">
@@ -911,12 +912,14 @@ window.__startGame = () => {
 
   // Settings are shared by all save slots.
   const SET_KEY = 'rocketGarage.settings';
-  const settings = { volume: 70, sfx: true, rumble: true, thrustMode: 'hold', shake: true, fx: 'full' };
+  const settings = { volume: 70, sfx: true, music: true, rumble: true, thrustMode: 'hold', shake: true, fx: 'full' };
   try { Object.assign(settings, JSON.parse(GameStore.getItem(SET_KEY) || '{}')); } catch (e) {}
   const saveSettings = () => { try { GameStore.setItem(SET_KEY, JSON.stringify(settings)); } catch (e) {} };
   const fewFx = () => reduceMotionPref || settings.fx === 'low';
   const reduceMotionPref = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const shakeOn = () => settings.shake ? 1 : 0;
+  ['pointerdown', 'keydown'].forEach(ev => window.addEventListener(ev, () => Sound.unlock(), true));
+  document.addEventListener('visibilitychange', () => Sound.setVolume());
 
   // ---------- Sound: small synthesized effects, no audio files ----------
   // CrazyGames: their mute setting wins over the in-game volume, and they want to know when gameplay starts/stops
@@ -951,8 +954,56 @@ window.__startGame = () => {
       src.connect(f); f.connect(g); g.connect(master); src.start(n); src.stop(n + dur + 0.05);
     }
     const seq = (notes, gap, type, vol) => notes.forEach((f, i) => setTimeout(() => tone(f, 0.13, type, vol), i * gap));
+    // ---------- music: three little synth loops scheduled ahead on the audio clock ----------
+    const N = m => 440 * Math.pow(2, (m - 69) / 12);
+    const SONGS = {
+      title: { bpm: 76, chords: [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]], arp: [0, 1, 2, 3, 2, 1, 0, 2], lead: 'triangle', vol: 0.06, pad: true, echo: 0.4 },
+      shop: { bpm: 104, chords: [[48, 52, 55], [57, 60, 64], [53, 57, 60], [55, 59, 62]], arp: [0, 2, 1, 2, 3, 2, 1, 2], lead: 'square', vol: 0.028, hat: true, echo: 0.15 },
+      space: { bpm: 90, chords: [[50, 53, 57], [46, 50, 53], [53, 57, 60], [48, 52, 55]], arp: [0, 1, 2, 3, 1, 2, 3, 2], lead: 'sine', vol: 0.07, pad: true, echo: 0.45 }
+    };
+    let musGain = null, echo = null, song = null, want = null, nextT = 0, step = 0, timer = 0;
+    const musicOn = () => settings.music !== false && settings.volume > 0 && !cgMuted() && !document.hidden;
+    function musOut() {
+      if (musGain) return;
+      musGain = ac.createGain(); musGain.gain.value = 0; musGain.connect(master);
+      echo = ac.createDelay(1); const fb = ac.createGain(), wet = ac.createGain(); fb.gain.value = 0.32; wet.gain.value = 0.3;
+      musGain.connect(echo); echo.connect(fb); fb.connect(echo); echo.connect(wet); wet.connect(master);
+    }
+    function note(freq, at, dur, type, vol) {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(vol, at + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+      o.connect(g); g.connect(musGain); o.start(at); o.stop(at + dur + 0.05);
+    }
+    function hat(at) {
+      const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+      s.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 7000; g.gain.setValueAtTime(0.04, at); g.gain.exponentialRampToValueAtTime(0.001, at + 0.05);
+      s.connect(f); f.connect(g); g.connect(musGain); s.start(at); s.stop(at + 0.06);
+    }
+    function tick() {
+      if (!ac || !song || !musicOn()) { if (ac) nextT = ac.currentTime + 0.1; return; }
+      const S = SONGS[song], spb = 60 / S.bpm / 2; // one eighth note
+      while (nextT < ac.currentTime + 0.3) {
+        const ch = S.chords[Math.floor(step / 8) % S.chords.length], i = step % 8, idx = S.arp[i];
+        note(N((idx >= ch.length ? ch[0] + 12 : ch[idx]) + 12), nextT, spb * 1.6, S.lead, S.vol);
+        if (i % 4 === 0) note(N(ch[0] - 12), nextT, spb * 3.6, 'triangle', 0.11);
+        if (S.pad && i === 0) ch.forEach(n => note(N(n), nextT, spb * 8, 'sine', 0.03));
+        if (S.hat && i % 2 === 1) hat(nextT);
+        nextT += spb; step++;
+      }
+    }
+    function playMusic(name) {
+      if (name) want = name;
+      if (!ac || !want) return; // waits for the first click or key press (browsers block sound before that)
+      ensure(); musOut();
+      if (song !== want) { song = want; step = 0; nextT = ac.currentTime + 0.15; echo.delayTime.value = 60 / SONGS[song].bpm * 0.75; }
+      musGain.gain.setTargetAtTime(musicOn() ? 0.55 : 0, ac.currentTime, 0.25);
+      if (!timer) timer = setInterval(tick, 60);
+    }
     return {
       wake: () => { if (ac) ensure(); },
+      playMusic,
+      unlock: () => { if (!ac && !ensure()) return; playMusic(); },
       click: () => tone(560, 0.06, 'square', 0.07),
       upgrade: () => seq([523, 659, 784, 1046], 60, 'square', 0.08),
       down: () => tone(330, 0.12, 'triangle', 0.1, 220),
@@ -976,7 +1027,7 @@ window.__startGame = () => {
         }
         rumbleGain.gain.setTargetAtTime(want * 0.45, ac.currentTime, 0.06);
       },
-      setVolume: () => { if (master) master.gain.value = cgMuted() ? 0 : settings.volume / 100; }
+      setVolume: () => { if (master) master.gain.value = cgMuted() ? 0 : settings.volume / 100; playMusic(); }
     };
   })();
   window.addEventListener('pointerdown', () => Sound.wake());
@@ -1255,6 +1306,7 @@ window.__startGame = () => {
   let screen = 'menu';
   function showScreen(m) {
     screen = m;
+    Sound.playMusic(m === 'menu' || m === 'intro' ? 'title' : m === 'shop' || m === 'box' ? 'shop' : 'space');
     document.body.classList.toggle('mode-menu', m === 'menu');
     document.body.classList.toggle('mode-intro', m === 'intro');
     document.body.classList.toggle('mode-shop', m === 'shop');
@@ -2769,7 +2821,7 @@ window.__startGame = () => {
     setFire(false); autoFire = 0; lift = 0; liftV = 0;
     flight = { phase: 'countdown', cd: 0, marks: 0, autoT: 0, bounceT: -1, bounced: false, ft: 0, x: 0, y: 0, vx: 0, vy: 0, ang: 0, angVel: 0, fuel: st.fuel, st,
       maxAlt: 0, maxSpd: 0, reached: false, closest: Infinity, trail: [], hide: false, end: null, burning: false, screen: { x: rx(), y: GROUND },
-      emptyT: -1, power: 1, lasers: [], boss: null, wave: null, waveN: 0, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
+      emptyT: -1, cashGot: 0, fw: [150, 400, 800, 1500, 3000], blimp: null, power: 1, lasers: [], boss: null, wave: null, waveN: 0, lane: 0, fx: { missiles: 0, speed: 0, shield: 0, inf: 0 }, event: null, eventDone: Math.random() > 0.12, eventWin: 0, ast: [], boxes: [], missiles: [], spawnA: 3, spawnB: 12, giants: [], deepSeen: false, fireT: 0, side: 1,
       smashed: 0, hits: 0, spawnC: 0.6, pick: [], stars: 0, rings: 0, crates: 0, closeCalls: 0, dodged: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, broke: { bird: 0, balloon: 0, plane: 0, drone: 0, rock: 0, debris: 0 }, station: null, stationDone: false, docked: false, chalDone: [], goldAlt: (!starsUnlocked() && (records.day || 1) >= 4 && Math.random() < 0.4) ? simPeak(st) * (0.3 + Math.random() * 0.3) : -1, starDone: [], gold: null, gotGold: false,
       chaos: 1 - handlingOf(state),
       kick: 0, kickT: 1, jamT: 0, sputT: 0, ph1: Math.random() * 6, ph2: Math.random() * 6 };
@@ -3097,7 +3149,8 @@ window.__startGame = () => {
     f.burning = (f.fuel > 0 || f.fx.inf > 0 || f.infinite) && (keys.thrust || f.infinite) && !(f.sputT > 0) && (f.phase === 'ascent' || f.phase === 'space');
     if (f.burning) { ay += f.st.accel * f.power; if (!(f.fx.inf > 0) && !f.infinite) f.fuel = Math.max(0, f.fuel - P.BURN * dt); }
     if (f.infinite && f.vy > 2600) f.vy = 2600;
-    if (f.springT > 0 && !f.burning && f.vy > 0) f.vy = Math.max(0, f.vy - 70 * dt);
+    // coasting bleeds 100-200 m/s every second, so gliding never saves fuel
+    if (!f.burning && f.vy > 0 && f.left && (f.phase === 'ascent' || f.phase === 'space')) f.vy = Math.max(0, f.vy - clamp(100 + f.vy * 0.1, 100, 200) * dt);
     // sideways position is steered directly (see updateFlight); physics only moves the rocket up and down
     f.vx = 0; f.vy += ay * dt;
     f.y += f.vy * dt * (f.fx.speed > 0 ? 2 : 1);
@@ -3248,7 +3301,8 @@ window.__startGame = () => {
     const earn = { height: heightPay, space: f.reached ? 175 : 0, moon: kind === 'moon' ? 2000 : 0, smash: f.smashed * 2,
       stars: f.stars * 4, close: f.closeCalls, chal: f.chalDone.reduce((a, c) => a + c.reward, 0),
       clean: f.hits === 0 && alt > 200 ? Math.round(heightPay * 0.25) : 0, dock: f.docked ? 200 : 0, rush: f.eventWin || 0 };
-    earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush;
+    earn.cash = f.cashGot || 0;
+    earn.total = earn.height + earn.space + earn.moon + earn.smash + earn.stars + earn.close + earn.chal + earn.clean + earn.dock + earn.rush + earn.cash;
     // first-day bonus: about 3x pay on day 1 so you can buy a couple of upgrades right away. After that, money is tight.
     earn.rookie = (records.day || 1) === 1 ? Math.round(earn.total * 2.3) : 0; earn.total += earn.rookie;
     f.earn = earn;
@@ -3317,7 +3371,7 @@ window.__startGame = () => {
       abort: 'You ended the flight early. The rocket is back in the garage.'
     };
     $('repNote').textContent = (luck > 0.75 ? 'Lucky rolls today! ' : luck < 0.25 ? 'Low rolls today. ' : '') + notes[f.end] + (f.reached || f.end === 'moon' ? '' : ` Space starts at ${P.SPACE / 1000} km. Upgrade and fly again.`);
-    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal], ['First day bonus', e.rookie]].filter(([, v]) => v > 0);
+    const e = f.earn, lines = [['Height flown', e.height], ['Stars grabbed', e.stars], ['Cash bags', e.cash], ['Close calls', e.close], ['No-hit bonus', e.clean], ['Docked at the station', e.dock], ['Fuel Rush', e.rush], ['Reached space', e.space], ['Landed on the Moon', e.moon], ['Smashed stuff', e.smash], ['Challenges', e.chal], ['First day bonus', e.rookie]].filter(([, v]) => v > 0);
     $('repEarn').innerHTML = `<h3>Today's pay</h3>${lines.map(([k, v]) => `<div class="eline"><span>${k}</span><b>+${v.toLocaleString()}</b></div>`).join('')}`
       + `<div class="etotal"><span>Total</span><b><i class="coin"></i><span id="earnCount">0</span></b></div>`
       + f.chalDone.map(c => `<div class="echal">&#10003; ${c.text}</div>`).join('')
@@ -3620,8 +3674,10 @@ window.__startGame = () => {
     if (skyIntensity() < 0.35) {
       f.lastWall = false;
       const q = Math.random();
-      if (q < 0.45) { const x0 = 100 + Math.random() * (VW - 200), n = 4 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) star(clamp(x0 + Math.sin(i * 0.8) * 70, 40, VW - 40), y - i * 50); }
-      else if (q < 0.72) f.pick.push({ kind: 'ring', x: 100 + Math.random() * (VW - 200), y, w: 92, p: 0 });
+      if (q < 0.36) { const x0 = 100 + Math.random() * (VW - 200), n = 4 + Math.floor(Math.random() * 3); for (let i = 0; i < n; i++) star(clamp(x0 + Math.sin(i * 0.8) * 70, 40, VW - 40), y - i * 50); }
+      else if (q < 0.56) f.pick.push({ kind: 'ring', x: 100 + Math.random() * (VW - 200), y, w: 92, p: 0 });
+      else if (q < 0.7) f.pick.push({ kind: 'cash', x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
+      else if (q < 0.76 && (records.day || 1) >= 2) f.boxes.push({ x: 90 + Math.random() * (VW - 180), y, p: Math.random() * 6 });
       else if (q < 0.94) { const b = makeAirThing(Math.min(alt, 1000)); b.vx *= 0.7; f.ast.push(b); }
       else { const ox = 140 + Math.random() * (VW - 280); add({ kind: 'drone', x: ox, ox, orr: 70, osc: 1, y, r: 14, vx: 1 }); }
       return;
@@ -3648,6 +3704,7 @@ window.__startGame = () => {
       f.ast.push(makeAirThing(alt));
       if (Math.random() < 0.5 * skyIntensity()) f.ast.push(makeAirThing(alt)); // two at once, more often later
       if (Math.random() < 0.25) star(80 + Math.random() * (VW - 160), y);
+      if (alt < 4000 && Math.random() < 0.2) f.pick.push({ kind: 'cash', x: 90 + Math.random() * (VW - 180), y: y - 80, p: Math.random() * 6 });
     }
   }
 
@@ -3859,6 +3916,10 @@ window.__startGame = () => {
       const rx0 = pts[1].x, ry0 = pts[1].y;
       f.pick.forEach(k => {
         if (k.used) return;
+        if (k.kind === 'cash' && pts.some(q => Math.hypot(k.x + Math.sin(k.p * 2) * 14 - q.x, k.y - q.y) < 22 + hitR)) {
+          k.used = true; f.cashGot += 10; Sound.gold(); burst(k.x, k.y, ['#6fd66f', '#eaffea', '#ffcf33'], 14, 5);
+          floats.push({ text: '+$10', x: clamp(k.x, 80, VW - 80), y: k.y - 30, life: 0.9, max: 0.9, color: '#6fd66f' });
+        }
         if (k.kind === 'star' && pts.some(q => Math.hypot(k.x - q.x, k.y - q.y) < 16 + hitR)) {
           k.used = true; f.stars++; Sound.block();
           burst(k.x, k.y, ['#ffe37a', '#fff3dc'], 8, 3);
@@ -3895,7 +3956,18 @@ window.__startGame = () => {
         }
       }
     }
-    f.pick = f.pick.filter(k => k.y < BASE + 60 && !(k.used && k.kind === 'star'));
+    f.pick = f.pick.filter(k => k.y < BASE + 60 && !(k.used && (k.kind === 'star' || k.kind === 'cash')));
+    // fireworks go off as you pass the first few heights, and a blimp floats by down low
+    if (active && f.fw.length && altNow >= f.fw[0] && !f.infinite) {
+      f.fw.shift();
+      for (let i = 0; i < 3; i++) setTimeout(() => { if (flight !== f) return; const x = 80 + Math.random() * (VW - 160), y = -yOff + 120 + Math.random() * 200;
+        burst(x, y, [['#ff5a5f', '#ffcf33', '#fff3dc'], ['#58c4ff', '#c77dff', '#fff3dc'], ['#3ee6b0', '#ff9ae8', '#ffcf33']][i], fewFx() ? 18 : 40, 7); Sound.block(); }, i * 220);
+    }
+    if (active && !f.blimp && !f.blimpDone && altNow > 250 && altNow < 2500 && !f.infinite) {
+      f.blimpDone = true; const dir = Math.random() < 0.5 ? 1 : -1;
+      f.blimp = { x: dir > 0 ? -180 : VW + 180, y: -yOff + 140, vx: dir * 70, p: 0 };
+    }
+    if (f.blimp) { const b = f.blimp; b.p += dt; b.x += b.vx * dt; if (f.phase !== 'done') b.y += flow * 0.3 * dt; if (b.x < -260 || b.x > VW + 260 || b.y > BASE + 120) f.blimp = null; }
     if (inSpace && !f.infinite) {
       f.spawnA -= dt; f.spawnB -= dt;
       // sparse right after reaching space, thick near the Moon
@@ -4292,6 +4364,36 @@ window.__startGame = () => {
     ctx.restore(); star(); strokeInk(3);
     dot(x - r * 0.18, y - r * 0.2, r * 0.12, 'rgba(255,255,255,.8)');
   }
+  function drawCashBag(x, y, tilt) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(tilt);
+    // little striped parachute
+    ctx.beginPath(); ctx.arc(0, -30, 24, Math.PI, 0); ctx.closePath(); ctx.fillStyle = '#fff3dc'; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = '#ff5a5f'; for (let i = -2; i <= 2; i += 2) { ctx.beginPath(); ctx.moveTo(0, -30); ctx.lineTo(i * 12 - 6, -56); ctx.lineTo(i * 12 + 6, -56); ctx.closePath(); ctx.fill(); } ctx.restore();
+    ctx.beginPath(); ctx.arc(0, -30, 24, Math.PI, 0); ctx.closePath(); strokeInk(2.5);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-23, -30); ctx.lineTo(-8, -4); ctx.moveTo(23, -30); ctx.lineTo(8, -4); ctx.moveTo(0, -30); ctx.lineTo(0, -6); ctx.stroke();
+    // the money bag
+    ctx.beginPath(); ctx.moveTo(-6, -8); ctx.quadraticCurveTo(-16, 2, -14, 12); ctx.quadraticCurveTo(0, 20, 14, 12); ctx.quadraticCurveTo(16, 2, 6, -8); ctx.closePath();
+    ctx.fillStyle = '#5fc55f'; ctx.fill(); strokeInk(2.5);
+    ctx.font = "15px 'Lilita One', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#eaffea'; ctx.fillText('$', 0, 5);
+    ctx.restore();
+  }
+  function drawBlimp(b, t) {
+    ctx.save(); ctx.translate(b.x, b.y + Math.sin(b.p * 1.5) * 4); if (b.vx < 0) ctx.scale(-1, 1);
+    ctx.globalAlpha = 0.95;
+    // tail fins
+    ctx.beginPath(); ctx.moveTo(-70, 0); ctx.lineTo(-104, -30); ctx.lineTo(-92, 0); ctx.lineTo(-104, 30); ctx.closePath(); ctx.fillStyle = '#c77dff'; ctx.fill(); strokeInk(3);
+    // balloon body
+    ctx.beginPath(); ctx.ellipse(0, 0, 92, 34, 0, 0, 7); ctx.fillStyle = '#e9e4f7'; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = '#8a3dff'; ctx.fillRect(-92, -6, 184, 12); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(0, 0, 92, 34, 0, 0, 7); strokeInk(3.5);
+    // gondola with a waving alien fan club
+    box(-24, 30, 48, 16, '#ffcf33', 5, 3);
+    [-12, 0, 12].forEach((x, i) => { dot(x, 28, 5, '#7ee06a'); ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x + 3, 26); ctx.lineTo(x + 7, 18 + Math.sin(t * 8 + i) * 3); ctx.stroke(); });
+    ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-18, 30); ctx.lineTo(-30, 26); ctx.moveTo(18, 30); ctx.lineTo(30, 26); ctx.stroke();
+    // blinking lights
+    dot(88, 0, 4, Math.sin(t * 6) > 0 ? '#ff5a5f' : '#7a2a2a'); dot(-60, -24, 3, Math.sin(t * 6 + 2) > 0 ? '#3ee6b0' : '#1f5a4a');
+    ctx.restore();
+  }
   function drawArcade(f, t) {
     if (f.station) drawStation2(f.station, t);
     f.giants.forEach(g => {
@@ -4320,7 +4422,8 @@ window.__startGame = () => {
       });
       ctx.restore();
     });
-    f.pick.forEach(k => { if (k.kind === 'star') drawStar(k.x, k.y + Math.sin(k.p * 4) * 3, Math.sin(k.p * 2) * 0.3); else drawRing(k.x, k.y, k.w, k.p, k.used); });
+    if (f.blimp) drawBlimp(f.blimp, t);
+    f.pick.forEach(k => { if (k.kind === 'star') drawStar(k.x, k.y + Math.sin(k.p * 4) * 3, Math.sin(k.p * 2) * 0.3); else if (k.kind === 'cash') { if (!k.used) drawCashBag(k.x + Math.sin(k.p * 2) * 14, k.y, Math.sin(k.p * 2) * 0.2); } else drawRing(k.x, k.y, k.w, k.p, k.used); });
     if (f.gold) {
       const g = f.gold, r = 22;
       ctx.save(); ctx.translate(g.x, g.y + Math.sin(g.p * 4) * 4); ctx.rotate(g.p * 1.5);
@@ -4587,12 +4690,12 @@ window.__startGame = () => {
   // settings panel
   function renderSettings() {
     $m('setVol').value = settings.volume;
-    [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).setAttribute('aria-pressed', String(!!settings[k])));
+    [['setSfx', 'sfx'], ['setMusic', 'music'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).setAttribute('aria-pressed', String(!!settings[k])));
     [['setThrust', 'thrustMode'], ['setFx', 'fx']].forEach(([id, k]) => $m(id).querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === settings[k]))));
   }
   $m('setVol').addEventListener('input', e => { settings.volume = +e.target.value; saveSettings(); Sound.setVolume(); });
   $m('setVol').addEventListener('change', () => Sound.click());
-  [['setSfx', 'sfx'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).addEventListener('click', () => {
+  [['setSfx', 'sfx'], ['setMusic', 'music'], ['setRumble', 'rumble'], ['setShake', 'shake']].forEach(([id, k]) => $m(id).addEventListener('click', () => {
     settings[k] = !settings[k]; saveSettings(); renderSettings(); Sound.click(); renderUI();
   }));
   [['setThrust', 'thrustMode'], ['setFx', 'fx']].forEach(([id, k]) => $m(id).addEventListener('click', e => {
