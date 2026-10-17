@@ -788,8 +788,9 @@ window.__startGame = () => {
         ['Rusty Roarer', 'Scrubbed clean. A steady orange flame.'],
         ['Twin Blaster', 'Two nozzles, twice the noise.'],
         ['Blue Fury', 'Three nozzles burning blue-hot.'],
-        ['Plasma Hog', 'Pink plasma. The neighbors have complained.']
-      ], futureCost: [180, 700, 1900, 5200, 12500] },
+        ['Plasma Hog', 'Pink plasma. The neighbors have complained.'],
+        ['Moon Forge', 'Rebuilt with Moon rock. Absolutely ridiculous power.']
+      ], futureCost: [180, 700, 1900, 5200, 12500, 30000], plus: true },
     { id: 'boosters', name: 'Thrusters', blurb: 'Extra push for a stronger launch', color: '#ff9a3c', shout: 'BIGGER THRUSTERS!',
       levels: [
         ['No Boosters', 'Nothing strapped on yet. Just vibes.'],
@@ -797,8 +798,9 @@ window.__startGame = () => {
         ['Soda Cans', 'Metal can boosters. Do not shake.'],
         ['Strap-Ons', 'Real side boosters with real nozzles.'],
         ['Mega Pods', 'Bigger pods, bigger kick.'],
-        ['Twin Titans', 'Huge hazard-striped boosters. Wildly unsafe.']
-      ], futureCost: [220, 850, 2100, 5800, 14000] },
+        ['Twin Titans', 'Huge hazard-striped boosters. Wildly unsafe.'],
+        ['Lunar Lifters', 'Moon-powered boosters. Hold on tight.']
+      ], futureCost: [220, 850, 2100, 5800, 14000, 32000], plus: true },
     { id: 'hull', name: 'Hull', blurb: 'Less air resistance and more fuel room', color: '#58c4ff', shout: 'BIGGER HULL!',
       levels: [
         ['Chair & Planks', 'A kitchen chair with planks roped around it. The pilot is just sitting there.'],
@@ -824,8 +826,9 @@ window.__startGame = () => {
         ['Sturdy Wings', 'Bigger fins: faster dodging and way less wobble.'],
         ['Tri-Fin', 'A third fin. Bye bye, jammed controls.'],
         ['Shark Fins', 'Swept back and mean-looking.'],
-        ['Lightning Fins', 'Huge fins with bolts painted on.']
-      ], futureCost: [120, 500, 1300, 3600, 8000] },
+        ['Lightning Fins', 'Huge fins with bolts painted on.'],
+        ['Comet Fins', 'Moon-metal fins. Turns on a dime.']
+      ], futureCost: [120, 500, 1300, 3600, 8000, 20000], plus: true },
     { id: 'fuel', name: 'Fuel Tank', blurb: 'Burn longer and fly higher', color: '#ffcf33', shout: 'MORE FUEL!',
       levels: [
         ['Gas Can', 'A lawnmower gas can roped under the seat.'],
@@ -868,10 +871,12 @@ window.__startGame = () => {
   const PAD_V = [0, 70, 120, 170, 220]; // upward speed (m/s) the spring gives you
   const ALL = [...UPGRADES, STATION, DISH, PAD];
   ALL.forEach(u => { u.max = u.max || MAX; u.cost = u.futureCost.slice(0, u.max); }); // prices in coins
+  // engine, thrusters and fins hide one more level that only opens up after you land on the Moon
+  ALL.filter(u => u.plus).forEach(u => { u.cost = u.futureCost.slice(); Object.defineProperty(u, 'max', { get: () => records.moon ? MAX + 1 : MAX }); });
 
   const fresh = () => ({ engine: 0, boosters: 0, hull: 0, nose: 0, fins: 0, fuel: 0, station: 0, dish: 0, pad: 0 });
   let state = fresh();
-  const maxOf = k => (ALL.find(u => u.id === k) || {}).max || MAX;
+  const maxOf = k => { const u = ALL.find(x => x.id === k) || {}; return u.plus ? MAX + 1 : u.max || MAX; };
   // Testing switch (Settings > Testing): every upgrade is affordable and buying costs nothing.
   const isTestMoney = () => false; // upgrades always cost cash
   const coinText = () => '$' + (records.coins || 0).toLocaleString();
@@ -1113,14 +1118,14 @@ window.__startGame = () => {
 
   // ---------- Physics constants (shared by the projection and real flights) ----------
   // Distances are game meters. The planet is small so space and the Moon are reachable.
-  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 8000, MY: 213000, RM: 8000, GM: 4 };
+  const P = { R: 60000, G0: 9.8, K: 25, BURN: 6, SPACE: 8000, MX: 0, MY: 213000, RM: 8000, GM: 4 };
   const MOON_START = Math.hypot(P.MX, P.MY) - P.RM;
   const PREVIEW_SECS = [0, 8, 30, 90];
 
   // Each level rolls inside its own band, and every band sits fully above the band before it.
   const BANDS = {
-    engine: [[80, 95], [170, 195], [270, 305], [380, 425], [490, 550], [580, 650]],   // thrust (kN)
-    boosters: [[0, 0], [70, 85], [130, 155], [200, 230], [260, 300], [310, 360]],      // thrust (kN)
+    engine: [[80, 95], [170, 195], [270, 305], [380, 425], [490, 550], [580, 650], [700, 780]],   // thrust (kN)
+    boosters: [[0, 0], [70, 85], [130, 155], [200, 230], [260, 300], [310, 360], [380, 440]],      // thrust (kN)
     fuel: [[42, 52], [95, 110], [145, 165], [190, 215], [230, 260], [260, 295]]          // fuel (gal), hull adds 30 per level
   };
   const LO = { e: 0, b: 0, f: 0 }, HI = { e: 1, b: 1, f: 1 };
@@ -1177,7 +1182,7 @@ window.__startGame = () => {
       <div>
         <h3>${u.name} <span data-r="lvname"></span></h3>
         <p data-r="desc"></p>
-        <div class="pips" aria-hidden="true">${'<i></i>'.repeat(u.lockedZero ? u.max : u.max + 1)}</div>
+        <div class="pips" aria-hidden="true">${'<i></i>'.repeat(u.lockedZero ? u.max : u.plus ? MAX + 2 : u.max + 1)}</div>
       </div>
       <p class="blurb">${u.blurb}</p>
       <div class="btns">
@@ -1433,7 +1438,7 @@ window.__startGame = () => {
       const locked = u.lockedZero && lv === 0;
       r.lvname.textContent = locked ? (u.id === 'station' ? 'Locked' : 'Not built') : `Lv ${u.lockedZero ? lv : lv + 1} · ${u.levels[lv][0]}`;
       r.desc.textContent = u.levels[lv][1];
-      r.pips.forEach((p, i) => p.classList.toggle('on', u.lockedZero ? i < lv : i <= lv));
+      r.pips.forEach((p, i) => { p.classList.toggle('on', u.lockedZero ? i < lv : i <= lv); p.hidden = !!u.plus && i > u.max; });
       r.down.disabled = lv === 0;
       if (lv >= u.max) {
         r.up.className = 'btn up max'; r.up.disabled = true;
@@ -1611,7 +1616,9 @@ window.__startGame = () => {
   function jiggle(lv) { if (lv === 0 && rattle > 0) ctx.translate((Math.random() - 0.5) * rattle, (Math.random() - 0.5) * rattle); }
 
   // ---------- Rocket geometry (origin = bottom center of the rocket, up is negative y) ----------
+  const visState = s => (s.engine > MAX || s.boosters > MAX || s.fins > MAX) ? { ...s, engine: Math.min(MAX, s.engine), boosters: Math.min(MAX, s.boosters), fins: Math.min(MAX, s.fins) } : s;
   function geom(s) {
+    s = visState(s);
     const h = s.hull, n = s.nose, f = s.fuel, e = s.engine, fi = s.fins, b = s.boosters;
     const W = h === 0 ? 84 : 74 + (h - 1) * 9;
     const H = h === 0 ? 150 : 160 + (h - 1) * 24;
@@ -2886,7 +2893,7 @@ window.__startGame = () => {
   }
 
   function drawRocket(t, G, look, surprised) {
-    const s = state;
+    const s = visState(state);
     // flames
     if (thr > 0.04) {
       if (s.engine === 0) {
@@ -3279,7 +3286,7 @@ window.__startGame = () => {
     if (f.infinite && f.vy > 2600) f.vy = 2600;
     // no coasting: let go of thrust and the ship stalls within a second or two, then drops fast
     if (!f.burning && f.left && (f.phase === 'ascent' || f.phase === 'space')) {
-      if (f.vy > 0) f.vy = Math.max(0, f.vy - Math.max(300, f.vy * 1.2) * dt);
+      if (f.vy > 0) f.vy -= Math.max(300, f.vy * 1.2) * dt; // can tip just below zero so the fall always starts
       else f.vy -= 25 * dt;
     }
     // sideways position is steered directly (see updateFlight); physics only moves the rocket up and down
@@ -3426,7 +3433,10 @@ window.__startGame = () => {
     records.flights++;
     records.best = Math.max(records.best, f.maxAlt);
     if (f.reached) records.space = true;
-    if (kind === 'moon') records.moon = true;
+    if (kind === 'moon') {
+      if (!records.moon) { f.starsEarned = (f.starsEarned || 0) + 5; records.starFound = true; queueTut('plus'); }
+      records.moon = true;
+    }
     // Pay day: coins for height plus bonuses. You only see this on the report.
     if (chalUnlocked()) { checkChallenges(f); if (!f.infinite && starsUnlocked()) checkStarChallenges(f); }
     // height pays well early, then tapers off; skill (stars, rings, dodging, no hits, docking) is what pays big later
@@ -4059,6 +4069,7 @@ window.__startGame = () => {
     const pp = ppmFor(f.infinite ? Math.max(0, altOf(f.x, f.y)) : Math.min(Math.max(0, altOf(f.x, f.y)), moonDistOf(f.x, f.y)));
     const flow = clamp(70 + Math.max(0, f.vy) * 0.5 * clamp(pp, 0.25, 1), 70, 320) * (f.fx.speed > 0 ? 2 : 1) * (f.infinite ? 1.5 : 1);
     if (f.invT > 0) f.invT -= dt;
+    f.shieldGrace = f.fx.shield > 0 ? 0.6 : Math.max(0, (f.shieldGrace || 0) - dt); // giants can't sneak through right as the bubble pops
     const top = -yOff - 50;
     const altNow = altOf(f.x, f.y);
     if (active && f.left && altNow > 15 && altNow < P.SPACE * 0.9 && f.vy > 5) {
@@ -4216,7 +4227,7 @@ window.__startGame = () => {
     });
     if (active && !f.hide) for (const g of f.giants) {
       if (g.warn > 0) continue;
-      if (f.fx.shield > 0 && Math.hypot(g.x - pts[1].x, g.y - pts[1].y) < g.r * 0.82 + shieldR(pts, nose)) {
+      if ((f.fx.shield > 0 || f.shieldGrace > 0) && Math.hypot(g.x - pts[1].x, g.y - pts[1].y) < g.r * 0.82 + shieldR(pts, nose) + 20) {
         g.dead = true; f.smashed++; burst(g.x, g.y, ['#8a7f9e', '#5d5a78', '#3ee6b0', '#fff3dc'], 40, 9); Sound.block(); shakeT = 0.3; continue;
       }
       if (pts.some(q => Math.hypot(g.x - q.x, g.y - q.y) < g.r * 0.82 + hitR * 0.7)) {
@@ -4897,6 +4908,10 @@ window.__startGame = () => {
   // ---------- First-time tutorials for base upgrades (once per save) ----------
   const KEYS_W = '<div class="tut-keys"><div class="row"><span class="fake-key">W</span><span class="fake-key">&#8593;</span><span class="fake-key">Space</span></div><div class="row">Hold to fire the engine</div></div>';
   const TUTORIALS = {
+    plus: [
+      { html: '<div class="tut-big">NEW!</div>', title: 'New upgrades unlocked!', text: 'Landing on the Moon gave your crew some Moon rock. Engine, Thrusters and Fins can now go one level higher. They are pricey, but wow.' },
+      { html: '<div class="tut-big">+5 <i class="gcoin"></i></div>', title: 'Moon bonus', text: 'You also earned 5 rainbow stars for making it home. Spend them on Mystery Boxes!' }
+    ],
     chal: [
       { html: '<div class="tut-big">&#10003;</div>', title: 'Challenges unlocked!', text: 'Challenges are goals you finish in a single flight. Each one pays extra cash at the end of the day.' },
       { html: '<div class="tut-big">3</div>', title: 'Three per tier', text: 'Finish any 3 challenges to clear a tier. Keep upgrading your rocket to unlock the next tier with bigger rewards. Check them anytime with the Challenges button.' },
